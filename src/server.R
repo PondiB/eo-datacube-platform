@@ -1,16 +1,32 @@
-#
-# This is a Plumber API. You can run the API by clicking
-# the 'Run API' button above.
-#
-# Find out more about building APIs with Plumber here:
-#
-#    https://www.rplumber.io/
+# Brian Pondi
+# 20-04-2022
+# https://www.rplumber.io/
 #
 
 library(plumber)
+library(rstac)
+library(openeo)
+library(gdalcubes)
+library(uuid)
+library(httr2)
 
 #* @apiTitle EO Lightweight Platform
-#* @apiDescription Plumber example description.
+#* @apiDescription This service integrates STAC API, OpenEO and gdalcubes to be a lightweight platform to enable processing of time series satellite images.
+
+
+#* Discover available satellite imagery in your region of interest
+#* @param msg The message to echo
+#* @get /v1/api/discover-data
+function(msg = "") {
+  list(msg = paste0("The message is: '", msg, "'"))
+}
+
+#* Create gdalcubes for your region of interest
+#* @param msg The message to echo
+#* @get /v1/api/create-gdalcubes
+function(msg = "") {
+  list(msg = paste0("The message is: '", msg, "'"))
+}
 
 #* Echo back the input
 #* @param msg The message to echo

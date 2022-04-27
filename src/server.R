@@ -9,21 +9,27 @@ library(openeo)
 library(gdalcubes)
 library(uuid)
 library(httr2)
+library(magrittr)
 
 #* @apiTitle EO Lightweight Platform
 #* @apiDescription This service integrates STAC API, OpenEO and gdalcubes to be a lightweight platform to enable processing of time series satellite images.
 
 
 #* Discover available satellite imagery in your region of interest
-#* @param msg The message to echo
-#* @get /v1/api/discover-data
-function(msg = "") {
-  list(msg = paste0("The message is: '", msg, "'"))
+#* @param bbox  e.g. 45.0,-20.1,  47.0, -19.8
+#* @param date_time e.g. 2020-01-01/2020-06-31
+#* @param collection_type e.g. s2_l2a or ls8_sr
+#* @get /discover-data
+function(bbox = "", date_time= "", collection_type = "") {
+  s_obj <- s_obj <- stac("https://explorer.digitalearth.africa/stac")
+  it_obj <- s_obj %>% stac_search(collections = "ls8_sr",
+                      datetime = "2021-01-01/2021-12-31",
+                      bbox = c(45.0,-20.1,  47.0, -19.8)) %>% get_request()
 }
 
 #* Create gdalcubes for your region of interest
 #* @param msg The message to echo
-#* @get /v1/api/create-gdalcubes
+#* @get /create-gdalcubes
 function(msg = "") {
   list(msg = paste0("The message is: '", msg, "'"))
 }
@@ -35,13 +41,6 @@ function(msg = "") {
     list(msg = paste0("The message is: '", msg, "'"))
 }
 
-#* Plot a histogram
-#* @serializer png
-#* @get /plot
-function() {
-    rand <- rnorm(100)
-    hist(rand)
-}
 
 #* Return the sum of two numbers
 #* @param a The first number to add

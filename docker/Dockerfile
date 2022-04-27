@@ -6,4 +6,5 @@ RUN install2.r --error \
     plumber \
     uuid \
     rstac \
-    httr2
+    httr2 \
+    magrittr

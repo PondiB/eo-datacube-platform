@@ -1,9 +1,6 @@
 # Brian Pondi
 # 20-04-2022
-# https://www.rplumber.io/
 #
-
-library(plumber)
 library(rstac)
 library(openeo)
 library(gdalcubes)
@@ -36,24 +33,43 @@ function(bbox = "", date_time= "", collection_type = "") {
 #* @get /create-gdalcubes
 function(bbox = "", date_time= "", collection_type = "") {
   # Download data from stac
+  s_obj <- s_obj <- stac("https://explorer.digitalearth.africa/stac")
+  it_obj <- s_obj %>% stac_search(collections = "ls8_sr",
+                      datetime = "2021-01-01/2021-03-31",
+                      bbox = c(45.0, -20.1, 47.0, -19.8)) %>% get_request() %>% assets_download( output_dir = "./temp",
+                      progress = TRUE,
+                      overwrite = FALSE)
 
   # Create gdalcubes from downloaded data
 
 }
 
+#* Get list of OpenEO processes
+#* @get /processes/open-eo
+function() {
+  #TO DO
+}
+
+#* Validate a user-defined process
+#* @param user_defined_process User-defined function
+#* @post /validate/user-defined-process
+function(user_defined_process) {
+  func_parse <- parse(text = user_defined_process)
+  user_function <- eval(func_parse)
+}
+
+
 #* Run a user defined process on gdalcubes
 #* @param user_defined_process User-defined function
-#* @post /user-defined-process
+#* @post /run/user-defined-process
 function(user_defined_process) {
     func_parse <- parse(text = user_defined_process)
     user_function <- eval(func_parse)
 }
 
 
-#* Return the sum of two numbers
-#* @param a The first number to add
-#* @param b The second number to add
-#* @post /sum
-function(a, b) {
-    as.numeric(a) + as.numeric(b)
+#* Delete all files
+#* @delete /files
+function() {
+    #Delete files
 }

@@ -4,5 +4,5 @@
 # https://www.rplumber.io/
 #
 library(plumber)
-r <- plumb("main.R")  
+r <- plumb("./src/main.R")  
 r$run(port=8000)

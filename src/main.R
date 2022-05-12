@@ -11,7 +11,7 @@ library(httr2)
 library(magrittr)
 
 # Additonal set ups
-gdalcubes_options(threads = 8)
+gdalcubes_options(parallel = 8)
 
 #con = connect(host = "https://openeo.cloud")
 
@@ -29,7 +29,7 @@ data_cube <- NULL
 #* @param collection_type e.g. s2_l2a or ls8_sr
 #* @get /v1/discover-data
 function(bbox = "", date_time= "", collection_type = "") {
-  s_obj <- s_obj <- stac("https://explorer.digitalearth.africa/stac")
+  s_obj <- stac("https://explorer.digitalearth.africa/stac")
   it_obj <- s_obj %>% stac_search(collections = "ls8_sr",
                       datetime = "2021-01-01/2021-03-31",
                       bbox = c(45.0, -20.1, 47.0, -19.8)) %>% get_request()            
@@ -64,7 +64,7 @@ function() {
 }
 
 #* Run OpenEO process
-#* @post /v1/run/processes/open-eo/
+#* @post /v1/run/processes/open-eo
 function() {
   #TO DO
   stac_data

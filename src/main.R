@@ -40,6 +40,7 @@ function(bbox = "", date_time= "", collection_type = "") {
 #* @param date_time e.g. 2020-01-01/2020-06-31
 #* @param collection_type e.g. s2_l2a or ls8_sr
 #* @get /v1/create-gdalcubes
+#* @serializer unboxedJSON
 function(bbox = "", date_time= "", collection_type = "") {
   # get data from stac
   s_obj <- s_obj <- stac("https://explorer.digitalearth.africa/stac")
@@ -47,13 +48,32 @@ function(bbox = "", date_time= "", collection_type = "") {
                       datetime = "2021-01-01/2021-03-31",
                       bbox = c(45.0, -20.1, 47.0, -19.8)) %>% get_request()
   # modify global variable to contain stac data
-  #stac_data <<- it_obj  
-  # create an image collection from the stac object
-  img_collection <- create_image_collection(it_obj, format = "L8_SR", out_file = "L8.db")
-
-  # create gdalcubes from image collection
-  img_collection
-
+  #stac_data <<- it_obj 
+  #--------------------------------------------------------------------------------#
+  # stac collection url
+  stac_url <- "https://explorer.digitalearth.africa/stac/search?collection=ls8_sr&time=2022-01-01/2022-03-31&bbox=[45.0,-20.1,47.0,-19.8]"
+  
+  # get response from stac collection
+  req <- request(stac_url)
+  resp <- req_perform(req)
+  resp_json <- resp_body_json(resp)
+  
+  
+  # create image collection from stac api response
+  img.col <- stac_image_collection(
+    resp_json$features
+  )
+  
+  # Define cube view with onthly aggregation, 100 Metres dimension
+  v.overview = cube_view(srs="EPSG:3857", extent=img.col, dx=100, dy=100, dt = "P1M", resampling="average", aggregation="median")
+  
+  # Gdalcubes creation
+  cube.overview = raster_cube(img.col, v.overview)
+  # Assign to a global variable
+  stac_data <<- cube.overview
+  
+  # Response JSON to user
+  msg <- list(status = "SUCCESS", code = "200",message ="gdalcubes object created successfully")
 }
 
 #* Get list of OpenEO processes

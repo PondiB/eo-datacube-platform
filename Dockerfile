@@ -24,7 +24,7 @@ RUN install2.r --error \
 COPY / /
 
 # open port 80 to traffic
-EXPOSE 80
+EXPOSE 8000
 
 # when the container starts, start the main.R script
 ENTRYPOINT ["Rscript", "server.R"]

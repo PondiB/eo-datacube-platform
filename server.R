@@ -4,5 +4,5 @@
 # https://www.rplumber.io/
 #
 library(plumber)
-r <- plumb("./src/main.R")  
-r$run(port=8000)
+r <- plumb("./src/api.R")  
+r$run(host = "0.0.0.0", port=8000)

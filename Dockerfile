@@ -18,12 +18,11 @@ RUN install2.r --error \
     httr2 \
     openeo \
     RColorBrewer \
-    raster \
     magrittr
 
-COPY / /
+COPY . .
 
-# open port 80 to traffic
+# open port 8000 to traffic
 EXPOSE 8000
 
 # when the container starts, start the main.R script

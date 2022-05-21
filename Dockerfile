@@ -18,6 +18,7 @@ RUN install2.r --error \
     httr2 \
     openeo \
     RColorBrewer \
+    bfast \
     magrittr
 
 COPY . .

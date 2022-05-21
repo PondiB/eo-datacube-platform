@@ -9,13 +9,17 @@ library(gdalcubes)
 library(uuid)
 library(httr2)
 library(magrittr)
+library(bfast)
 
 # Additonal set ups
-gdalcubes_options(parallel = 8)
+gdalcubes_options(parallel = 16)
+
+# Import OpenEO implemented funcions
+source("./R/openeo-processes.R")
 
 #con = connect(host = "https://openeo.cloud")
 
-# Gdalcube global variable
+# gdalcube global variable
 stac_items <- NULL
 data_cube <- NULL
 
@@ -57,7 +61,7 @@ function() {
     stac_items$features
   )
   
-  # Define cube view with onthly aggregation, 100 Metres dimension
+  # Define cube view with monthly aggregation, 100 Metres dimension
   v.overview = cube_view(srs="EPSG:3857", extent=img.col, dx=100, dy=100, dt = "P1M", resampling="average", aggregation="median")
   
   # Gdalcubes creation
@@ -100,6 +104,7 @@ function(user_defined_process) {
   #focus on apply pixel for a start
     func_parse <- parse(text = user_defined_process)
     user_function <- eval(func_parse)
+    results <- data_cube %>% reduce_time(names= c("test_1", "test_2"),FUN = user_function)
 }
 
 

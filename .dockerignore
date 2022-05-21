@@ -7,3 +7,6 @@
 
 # User-specific files
 .Ruserdata
+
+# Ignore temp folder
+src/temp

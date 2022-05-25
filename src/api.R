@@ -11,6 +11,7 @@ library(httr2)
 library(magrittr)
 library(bfast)
 
+
 # Additonal set ups
 gdalcubes_options(parallel = 16)
 
@@ -28,24 +29,24 @@ data_cube <- NULL
 
 
 #* Discover available satellite imagery in your region of interest
-#* @param min_x 7.1
-#* @param min_y 51.8
-#* @param max_x 7.2
-#* @param max_y 52.8
+#* @param xmin 6.1
+#* @param ymin 46.8
+#* @param xmax 6.2
+#* @param ymax 46.3
 #* @param datetime_range 2021-01-01/2021-06-31
 #* @param collection_type sentinel-s2-l2a-cogs
 #* @get /v1/discover-data
-function(min_x = "", min_y = "", max_x = "", max_y = "", datetime_range= "", collection_type = "") {
+function(xmin = "", ymin = "", xmax = "", ymax = "", datetime_range= "", collection_type = "") {
   #Convert bbox values to numeric
-  min_x <- as.numeric(min_x)
-  min_y <- as.numeric(min_y)
-  max_x <- as.numeric(max_x)
-  max_y <- as.numeric(max_y)
+  min_x <- as.numeric(xmin)
+  min_y <- as.numeric(ymin)
+  max_x <- as.numeric(xmax)
+  max_y <- as.numeric(ymax)
   #Connect to STAC API and get sentinel data
   stac_object = stac("https://earth-search.aws.element84.com/v0")
   items = stac_object %>%
     stac_search(collections = "sentinel-s2-l2a-cogs",
-              bbox = c(7.1, 51.8, 7.2, 52.8), 
+              bbox = c(6.1,46.2,6.2,46.3), 
               datetime = "2021-01-01/2021-03-31") %>%
     post_request() %>% items_fetch() 
   # Assign to global variable for stac_items

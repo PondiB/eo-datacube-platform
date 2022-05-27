@@ -19,6 +19,7 @@ RUN install2.r --error \
     openeo \
     RColorBrewer \
     bfast \
+    tidyverse \
     magrittr
 
 COPY . .

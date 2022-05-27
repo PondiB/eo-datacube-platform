@@ -63,9 +63,9 @@ function() {
   )
   
   # Define cube view with monthly aggregation, 100 Metres dimension
-  v.overview = cube_view(srs="EPSG:3857", extent=img.col, dx=100, dy=100, dt = "P1M", resampling="average", aggregation="median")
+  v.overview = cube_view(srs="EPSG:3857", extent=img.col, dx=200, dy=200, dt = "P1M", resampling="average", aggregation="median")
   
-  # Gdalcubes creation
+  # gdalcubes creation
   cube.overview = raster_cube(img.col, v.overview)
   # Assign to a global variable
   data_cube <<- cube.overview
@@ -82,11 +82,21 @@ function() {
   processes_list <- list("filter_bands", "filter_bbox", "resample_spatial", "save_result")
 }
 
-#* Run OpenEO process
-#* @post /v1/run/processes/open-eo
-function() {
+#* Select bands from gdalcube
+#* @post /v1/run/processes/open-eo/filter_bands
+#* @param bands "B04, B08"
+function(bands = "") {
   #TO DO
-  stac_items
+  filter_bands <- function(data = cube, bands ="B04,B08" ){
+  if(is.null(bands)){
+    error.msg <- "The bands values should not be empty"
+    return(error.msg)
+  }
+    bands.split <- str_split(bands, ",")
+    bands.unlist <- unlist(bands.split)
+    cube %>% select_bands(bands.unlist)
+}
+  cube <- filter_bands(stac_items, bands)
 }
 
 #* Validate a user-defined process

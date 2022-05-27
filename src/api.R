@@ -10,10 +10,14 @@ library(uuid)
 library(httr2)
 library(magrittr)
 library(bfast)
+library(tidyverse)
 
 
 # Additonal set ups
 gdalcubes_options(parallel = 16)
+
+#Surpress warnings
+options(warn=-1)
 
 # Import OpenEO implemented funcions
 source("./R/openeo-processes.R")
@@ -70,7 +74,7 @@ function() {
   # Assign to a global variable
   data_cube <<- cube.overview
   
-  # Response JSON to user
+  # Response msg to user
   msg <- list(status = "SUCCESS", code = "200",message ="gdalcubes object created successfully")
 }
 
@@ -83,21 +87,43 @@ function() {
 }
 
 #* Select bands from gdalcube
+#* @param bands B04, B08
 #* @post /v1/run/processes/open-eo/filter_bands
-#* @param bands "B04, B08"
 function(bands = "") {
-  #TO DO
-  filter_bands <- function(data = cube, bands ="B04,B08" ){
+  # filter bands function
+  filter_bands <- function(data = cube, bands = bands){
   if(is.null(bands)){
     error.msg <- "The bands values should not be empty"
     return(error.msg)
   }
     bands.split <- str_split(bands, ",")
     bands.unlist <- unlist(bands.split)
-    cube %>% select_bands(bands.unlist)
+    data %>% select_bands(bands.unlist)
+  }
+  stac_items.filt <- filter_bands(data = stac_items, bands = bands)
+  stac_items <<- stac_items.filt
+  # Response msg to user
+  msg <- list(status = "SUCCESS", code = "200",message ="gdalcubes bands filtered successfully")
 }
-  cube <- filter_bands(stac_items, bands)
+
+#* Filter gdalcubes using bbox
+#* @post /v1/run/processes/open-eo/filter_bbox
+function(){
+
 }
+
+#* Resampling gdalcubes
+#* @post /v1/run/processes/open-eo/resample_spatial
+function(){
+
+}
+
+#* Save gdalcubes results to AWS S3 or locally
+#* @post /v1/run/processes/open-eo/save_result
+function(){
+
+}
+
 
 #* Validate a user-defined process
 #* @param user_defined_process User-defined function
@@ -116,6 +142,14 @@ function(user_defined_process) {
     func_parse <- parse(text = user_defined_process)
     user_function <- eval(func_parse)
     results <- data_cube %>% reduce_time(names= c("test_1", "test_2"),FUN = user_function)
+}
+
+#* Plot datacube
+#* @get /v1/plot
+#* @serializer contentType list(type='image/png')
+function() {
+    # plot images
+    images.plot <- stac_items %>% plot
 }
 
 

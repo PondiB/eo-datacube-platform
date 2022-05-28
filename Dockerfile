@@ -1,4 +1,4 @@
-FROM rocker/r-ver:4.1.3
+FROM rocker/r-ver:4.1.0
 
 RUN apt-get update -qq && apt-get install -y \
     libssl-dev \
@@ -15,8 +15,6 @@ RUN install2.r --error \
     plumber \
     uuid \
     rstac \
-    httr2 \
-    openeo \
     RColorBrewer \
     bfast \
     tidyverse \

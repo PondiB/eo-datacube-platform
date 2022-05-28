@@ -4,10 +4,8 @@
 
 # Import relevant libs
 library(rstac)
-library(openeo)
 library(gdalcubes)
 library(uuid)
-library(httr2)
 library(magrittr)
 library(bfast)
 library(tidyverse)
@@ -87,21 +85,26 @@ function() {
 }
 
 #* Select bands from gdalcube
-#* @param bands B04, B08
+#* @param bands B04,B08
 #* @post /v1/run/processes/open-eo/filter_bands
 function(bands = "") {
+
+  #split user input
+  bands.split <- str_split(bands, ",")
+  bands.unlist <- unlist(bands.split)
+    
   # filter bands function
   filter_bands <- function(data = cube, bands = bands){
-  if(is.null(bands)){
-    error.msg <- "The bands values should not be empty"
-    return(error.msg)
-  }
-    bands.split <- str_split(bands, ",")
-    bands.unlist <- unlist(bands.split)
+    if(is.null(bands)){
+      error.msg <- "The bands values should not be empty"
+      return(error.msg)
+    }
     data %>% select_bands(bands.unlist)
   }
-  stac_items.filt <- filter_bands(data = stac_items, bands = bands)
-  stac_items <<- stac_items.filt
+  #call the function
+  data_cube.filt <- filter_bands(data = data_cube, bands = bands)
+  # rewrite filtered cubes to the global variable
+  data_cube <<- data_cube.filt
   # Response msg to user
   msg <- list(status = "SUCCESS", code = "200",message ="gdalcubes bands filtered successfully")
 }
@@ -146,10 +149,10 @@ function(user_defined_process) {
 
 #* Plot datacube
 #* @get /v1/plot
-#* @serializer contentType list(type='image/png')
+#* @serializer png
 function() {
     # plot images
-    images.plot <- stac_items %>% plot
+    data_cube.plot <- data_cube %>% plot
 }
 
 

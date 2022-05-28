@@ -1,9 +1,9 @@
 version: "3.9"
 
 services:
-  geo-datacube-service:
+  geo-datacube:
     build: .
-    image: geo-datacube-eo:0.0.1
+    #image: geo-datacube-eo:0.0.1
     container_name: geo-datacube-eo
     ports:
       - "8000:8000"

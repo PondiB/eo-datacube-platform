@@ -1,12 +1,12 @@
 # TO DO - Implement a couple of OpenEO standardized process focusing on data cubes.
 
-library(openeo)
-connect(host="https://openeo.cloud")
+#library(openeo)
+#connect(host="https://openeo.cloud")
 
 # list collection and processes
 #colls = list_collections()
 #list_processes()
-p = processes()
+
 
 #' filter bands
 filter_bands <- function(eo_datacube, bands){

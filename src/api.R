@@ -55,8 +55,8 @@ function(xmin = "", ymin = "", xmax = "", ymax = "", datetime_range= "", collect
   stac_items <<- items          
 }
 
-#* Create gdalcubes for your region of interest
-#* @get /v1/create-gdalcubes
+#* Create datacube(gdalcubes) for your region of interest
+#* @get /v1/load_collection
 #* @serializer unboxedJSON
 function() {
   # create image collection from stac items features
@@ -81,7 +81,7 @@ function() {
 function() {
   # TO DO, Implement some openeo processes that work on a raster-cube
   # https://processes.openeo.org/#filter_bbox
-  processes_list <- list("filter_bands", "filter_bbox", "resample_spatial", "save_result")
+  processes_list <- list("load_collection","filter_bands", "filter_bbox", "resample_spatial", "save_result")
 }
 
 #* Select bands from gdalcube
@@ -94,12 +94,13 @@ function(bands = "") {
   bands.unlist <- unlist(bands.split)
     
   # filter bands function
-  filter_bands <- function(data = cube, bands = bands){
+  filter_bands <- function(data = data, bands = bands){
     if(is.null(bands)){
       error.msg <- "The bands values should not be empty"
       return(error.msg)
     }
-    data %>% select_bands(bands.unlist)
+    cube = select_bands(data, bands.unlist)
+    return(cube)
   }
   #call the function
   data_cube.filt <- filter_bands(data = data_cube, bands = bands)
@@ -109,13 +110,34 @@ function(bands = "") {
   msg <- list(status = "SUCCESS", code = "200",message ="gdalcubes bands filtered successfully")
 }
 
-#* Filter gdalcubes using bbox
+#* Limits the data cube to the specified bounding box.
+#* @param west 6.1
+#* @param south 46.8
+#* @param east 6.2
+#* @param north 46.3
 #* @post /v1/run/processes/open-eo/filter_bbox
-function(){
+function(west="", south="", east="", north=""){
+  #Convert to numeric
+  west <- as.numeric(west)
+  south <- as.numeric(south)
+  east <- as.numeric(east)
+  north <- as.numeric(north)
+  
+  # filter bbox function
+  filter_bbox <- function(data = data, extent = extent){
+    #TO DO
+    
+  }
+  #call the function
+  data_cube.filt <- filter_bbox(data = data_cube, extent = extent)
+  # rewrite filtered cubes to the global variable
+  data_cube <<- data_cube.filt
+  # Response msg to user
+  msg <- list(status = "SUCCESS", code = "200",message ="gdalcubes filtered by bounding box successfully")
 
 }
 
-#* Resampling gdalcubes
+#* Resampling datacubes(gdalcubes)
 #* @post /v1/run/processes/open-eo/resample_spatial
 function(){
 
@@ -147,7 +169,7 @@ function(user_defined_process) {
     results <- data_cube %>% reduce_time(names= c("test_1", "test_2"),FUN = user_function)
 }
 
-#* Plot datacube
+#* Plot processed datacube
 #* @get /v1/plot
 #* @serializer png
 function() {

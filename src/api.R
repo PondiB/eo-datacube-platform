@@ -37,7 +37,7 @@ data_cube <- NULL
 #* @param ymax 46.3
 #* @param datetime_range 2021-01-01/2021-06-31
 #* @param collection_type sentinel-s2-l2a-cogs
-#* @get /v1/discover-data
+#* @get /v1/stac/discover-data
 function(xmin = "", ymin = "", xmax = "", ymax = "", datetime_range= "", collection_type = "") {
   #Convert bbox values to numeric
   min_x <- as.numeric(xmin)
@@ -56,7 +56,7 @@ function(xmin = "", ymin = "", xmax = "", ymax = "", datetime_range= "", collect
 }
 
 #* Create datacube(gdalcubes) for your region of interest
-#* @get /v1/run/processes/open-eo/load_collection
+#* @get /v1/processes/open-eo/load_collection
 #* @serializer unboxedJSON
 function() {
   # create image collection from stac items features
@@ -80,14 +80,14 @@ function() {
 #* @get /v1/processes/open-eo/list
 function() {
   # TO DO, Implement some openeo processes that work on a raster-cube
-  # https://processes.openeo.org/#filter_bbox
+  # https://processes.openeo.org
   processes_list <- list("apply","filter_bands", "filter_bbox", "resample_spatial","load_collection",
                          "merge_cubes","reduce_dimension","rename_dimension","rename_labels","run_udf", "save_result","trim_cube")
 }
 
 #* Select bands from gdalcube
 #* @param bands B04,B08
-#* @post /v1/run/processes/open-eo/filter_bands
+#* @post /v1/processes/open-eo/filter_bands
 function(bands = "") {
 
   #split user input
@@ -116,7 +116,7 @@ function(bands = "") {
 #* @param south 46.8
 #* @param east 6.2
 #* @param north 46.3
-#* @post /v1/run/processes/open-eo/filter_bbox
+#* @post /v1/processes/open-eo/filter_bbox
 function(west="", south="", east="", north=""){
   #Convert to numeric
   west <- as.numeric(west)
@@ -138,31 +138,39 @@ function(west="", south="", east="", north=""){
 
 }
 
+#* Apply a process to each pixel
+#* @param process (B05-B04)/(B05+B04)
+#* @post /v1/processes/open-eo/apply
+function(process =""){
+  # apply function
+  apply <- function(data = data, process = process){
+    if(is.null(data) | is.null(process) |is.empty(data) | is.empty(process)){
+      error.msg <- "The cubes or process cannot be null or empty"
+      return(error.msg)
+    }
+    cube <- apply_pixel(data, process)
+    return(cube)
+  }
+  #call the function
+  data_cube.applied <- filter_bbox(data = data_cube, process)
+  # rewrite filtered cubes to the global variable
+  data_cube <<- data_cube.applied
+  # Response msg to user
+  msg <- list(status = "SUCCESS", code = "200",message ="Process applied successfully")
+  
+  
+}
+
 #* Resampling datacubes(gdalcubes)
-#* @post /v1/run/processes/open-eo/resample_spatial
+#* @post /v1/processes/open-eo/resample_spatial
 function(){
 
-}
-
-#* Save gdalcubes results to AWS S3 or locally
-#* @post /v1/run/processes/open-eo/save_result
-function(){
-
-}
-
-
-#* Validate a user-defined process
-#* @param user_defined_process User-defined function
-#* @post /v1/validate/user-defined-process
-function(user_defined_process) {
-  func_parse <- parse(text = user_defined_process)
-  user_function <- eval(func_parse)
 }
 
 
 #* Run a user defined process on gdalcubes
 #* @param user_defined_process User-defined function
-#* @post /v1/run/user-defined-process
+#* @post /v1/processes/open-eo/run_udf
 function(user_defined_process) {
   #focus on apply pixel for a start
     func_parse <- parse(text = user_defined_process)
@@ -170,8 +178,14 @@ function(user_defined_process) {
     results <- data_cube %>% reduce_time(names= c("test_1", "test_2"),FUN = user_function)
 }
 
+#* Save gdalcubes results to AWS S3 or locally
+#* @post /v1/processes/open-eo/save_result
+function(){
+  
+}
+
 #* Plot processed datacube
-#* @get /v1/plot
+#* @get /v1/plot/datacube
 #* @serializer png
 function() {
     # plot images

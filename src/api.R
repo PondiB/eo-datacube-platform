@@ -56,7 +56,7 @@ function(xmin = "", ymin = "", xmax = "", ymax = "", datetime_range= "", collect
 }
 
 #* Create datacube(gdalcubes) for your region of interest
-#* @get /v1/load_collection
+#* @get /v1/run/processes/open-eo/load_collection
 #* @serializer unboxedJSON
 function() {
   # create image collection from stac items features
@@ -77,11 +77,12 @@ function() {
 }
 
 #* Get list of OpenEO processes
-#* @get /v1/processes/open-eo
+#* @get /v1/processes/open-eo/list
 function() {
   # TO DO, Implement some openeo processes that work on a raster-cube
   # https://processes.openeo.org/#filter_bbox
-  processes_list <- list("load_collection","filter_bands", "filter_bbox", "resample_spatial", "save_result")
+  processes_list <- list("apply","filter_bands", "filter_bbox", "resample_spatial","load_collection",
+                         "merge_cubes","reduce_dimension","rename_dimension","rename_labels","run_udf", "save_result","trim_cube")
 }
 
 #* Select bands from gdalcube

@@ -98,8 +98,7 @@ function(bands = "") {
   # filter bands function
   filter_bands <- function(data = data, bands = bands){
     if(is.null(bands)){
-      error.msg <- "The bands values should not be empty"
-      return(error.msg)
+      stop("The bands values should not be empty")
     }
     cube = select_bands(data, bands.unlist)
     return(cube)
@@ -146,8 +145,7 @@ function(process =""){
   # apply function
   apply <- function(data = data, process = process){
     if(is.null(data) | is.null(process) |is.empty(data) | is.empty(process)){
-      error.msg <- "The cubes or process cannot be null or empty"
-      return(error.msg)
+      stop("The cubes or process cannot be null or empty")
     }
     cube <- apply_pixel(data, process)
     return(cube)
@@ -168,6 +166,31 @@ function(){
 }
 
 
+#* Merge two data cubes **Experimental
+#* @param other_cube
+#* @post /v1/processes/open-eo/merge_cubes
+function(other_cube = ""){
+  merge_cubes <- function(datacube1 , datacube2){
+    #check if they are not datacubes
+    `%!in%` <- Negate(`%in%`)
+    if("cube" %!in% class(datacube1) && "cube" %!in% class(datacube1)) {
+      stop('Provided cubes are not of class "cube"')
+    }
+    #check if the datacubes have equal dimesions
+    compare = compare.list(dimensions(datacube1), dimensions(datacube2))
+    if(FALSE %in% compare) {
+      stop("Dimensions of the datacubes provided are not equal")
+    }
+    cube = join_bands(c(cube1, cube2))
+    return(cube)
+  }
+  merge_cubes(data_cube, other_cube)
+  # Response msg to user
+  msg <- list(status = "SUCCESS", code = "200",message ="Process applied successfully")
+  
+}
+
+
 #* Run a user defined process on gdalcubes
 #* @param user_defined_process User-defined function
 #* @post /v1/processes/open-eo/run_udf
@@ -178,7 +201,7 @@ function(user_defined_process) {
     results <- data_cube %>% reduce_time(names= c("test_1", "test_2"),FUN = user_function)
 }
 
-#* Save processed data, AWS S3 or locally
+#* Save processed data
 #* @param format TIFF or NetCDF
 #* @post /v1/processes/open-eo/save_result
 function(format=""){
@@ -189,7 +212,7 @@ function(format=""){
     }else if(tolower(format) =="netcdf"){
       write_ncdf(data, tempfile(pattern = "cube", tmpdir = getwd(),fileext = ".nc"))
     }else{
-      return("The format entered is not supported")
+      stop("The format entered is not supported")
     }
   }
   #call the function

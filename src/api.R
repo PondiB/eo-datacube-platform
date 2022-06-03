@@ -18,9 +18,10 @@ gdalcubes_options(parallel = 16)
 options(warn=-1)
 
 # Import OpenEO implemented funcions
-source("./R/openeo-processes.R")
+# source("./R/openeo-processes.R")
 
-#con = connect(host = "https://openeo.cloud")
+#set workdir
+setwd(".")
 
 # gdalcube global variable
 stac_items <- NULL
@@ -158,7 +159,6 @@ function(process =""){
   # Response msg to user
   msg <- list(status = "SUCCESS", code = "200",message ="Process applied successfully")
   
-  
 }
 
 #* Resampling datacubes(gdalcubes)
@@ -178,9 +178,24 @@ function(user_defined_process) {
     results <- data_cube %>% reduce_time(names= c("test_1", "test_2"),FUN = user_function)
 }
 
-#* Save gdalcubes results to AWS S3 or locally
+#* Save processed data, AWS S3 or locally
+#* @param format TIFF or NetCDF
 #* @post /v1/processes/open-eo/save_result
-function(){
+function(format=""){
+  #save_result, Default format is tif
+  save_result <- function(data,format){
+    if(is.null(format)| tolower(format) =="tiff"  | format =="") {
+      write_tif(data, tempfile(pattern = "cube", tmpdir = getwd(),fileext = ".tif"))
+    }else if(tolower(format) =="netcdf"){
+      write_ncdf(data, tempfile(pattern = "cube", tmpdir = getwd(),fileext = ".nc"))
+    }else{
+      return("The format entered is not supported")
+    }
+  }
+  #call the function
+  save_result(data = data_cube, format = format)
+  # Response msg to user
+  msg <- list(status = "SUCCESS", code = "200",message ="Processed data saved successfully")
   
 }
 

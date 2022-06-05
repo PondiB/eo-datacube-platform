@@ -144,7 +144,7 @@ function(west="", south="", east="", north=""){
 function(process =""){
   # apply function
   apply <- function(data = data, process = process){
-    if(is.null(data) | is.null(process) |is.empty(data) | is.empty(process)){
+    if(is.null(data) ||  is.null(process) || is.empty(data) ||  is.empty(process)){
       stop("The cubes or process cannot be null or empty")
     }
     cube <- apply_pixel(data, process)
@@ -159,10 +159,41 @@ function(process =""){
   
 }
 
-#* Resampling datacubes(gdalcubes)
-#* @post /v1/processes/open-eo/resample_spatial
-function(){
-
+#* Reduce dimensions
+#* @param reducer
+#* @param dimension time or bands
+#* @post /v1/processes/open-eo/reduce_dimension
+function(reducer="", dimension=""){
+  #reduce dimensions function
+  reduce_dimension <-function(data,reducer, dimension){
+    if(dimension == "time") {
+      
+      bands = bands(data)$name
+      bandStr = c()
+      
+      for (i in 1:length(bands)) {
+        bandStr = append(bandStr, sprintf("%s(%s)", reducer, bands[i]))
+      }
+      
+      cube = reduce_time(data, bandStr)
+      return(cube)
+    }
+    else if (dimension == "bands") {
+      
+      cube = apply_pixel(data, reducer, keep_bands = FALSE)
+      return(cube)
+    }
+    else {
+      stop('Kindly select "time" or "bands" as dimension')
+    }
+  }
+  #call the function
+  data_cube.reduced <- reduce_dimension(data = data_cube, reducer, dimension)
+  # rewrite cubes to the global variable
+  data_cube <<- data_cube.reduced
+  # Response msg to user
+  msg <- list(status = "SUCCESS", code = "200",message ="Dimensions reduced successfully")
+  
 }
 
 
@@ -170,6 +201,7 @@ function(){
 #* @param other_cube
 #* @post /v1/processes/open-eo/merge_cubes
 function(other_cube = ""){
+  #merge cubes function
   merge_cubes <- function(datacube1 , datacube2){
     #check if they are not datacubes
     `%!in%` <- Negate(`%in%`)

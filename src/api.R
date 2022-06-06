@@ -95,21 +95,17 @@ function(collection ="sentinel-s2-l2a-cogs", bbox ="6.1,46.2,6.2,46.3",
     v.overview = cube_view(srs="EPSG:3857", extent=img.col,
                            dx=spatial_resolution, dy=spatial_resolution, 
                            dt = temporal_resolution, resampling="average", aggregation="median")
-    ### data cube
-    if(bands==""){
-      # gdalcubes creation
-      cube = raster_cube(img.col, v.overview)
-      return(cube)
-    }else{
+    # gdalcubes creation
+    cube = raster_cube(img.col, v.overview)
+    if(bands != ""|| ! is.null(bands)){
       #split user input
       bands.split <- str_split(bands, ",")
       bands.unlist <- unlist(bands.split)
       # gdalcubes creation with band filtering
-      cube = raster_cube(img.col, v.overview)%>%
-             select_bands(bands.unlist)
+      cube = select_bands(cube, bands.unlist)
       return(cube)
     }
-    
+    return(cube)
   }
 
   # gdalcube main call

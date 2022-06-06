@@ -27,8 +27,8 @@ setwd(".")
 stac_items <- NULL
 data_cube <- NULL
 
-#* @apiTitle EO Lightweight Platform
-#* @apiDescription This service integrates STAC API, OpenEO and gdalcubes to be a lightweight platform to enable processing of time series satellite images.
+#* @apiTitle Lightweight Platform To Analyze Satellite Images
+#* @apiDescription This service integrates STAC API, OpenEO standards and gdalcubes to be a lightweight platform to enable processing of time series satellite images.
 
 
 #* Discover available satellite imagery in your region of interest
@@ -36,30 +36,41 @@ data_cube <- NULL
 #* @param ymin 46.8
 #* @param xmax 6.2
 #* @param ymax 46.3
-#* @param datetime_range 2021-01-01/2021-06-31
-#* @param collection_type sentinel-s2-l2a-cogs
+#* @param time_range 2021-01-01/2021-06-31
+#* @param collection  sentinel-s2-l2a-cogs
 #* @get /v1/stac/discover-data
-function(xmin = "", ymin = "", xmax = "", ymax = "", datetime_range= "", collection_type = "") {
+function(xmin = "6.1", ymin = "46.8", xmax = "6.2", ymax = "46.3", time_range = "2021-01-01/2021-06-30", collection = "sentinel-s2-l2a-cogs") {
   #Convert bbox values to numeric
-  min_x <- as.numeric(xmin)
-  min_y <- as.numeric(ymin)
-  max_x <- as.numeric(xmax)
-  max_y <- as.numeric(ymax)
+  xmin <- as.numeric(xmin)
+  ymin <- as.numeric(ymin)
+  xmax <- as.numeric(xmax)
+  ymax <- as.numeric(ymax)
   #Connect to STAC API and get sentinel data
   stac_object = stac("https://earth-search.aws.element84.com/v0")
   items = stac_object %>%
-    stac_search(collections = "sentinel-s2-l2a-cogs",
-              bbox = c(6.1,46.2,6.2,46.3), 
-              datetime = "2021-01-01/2021-03-31") %>%
+    stac_search(collections = collection,
+              bbox = c(xmin,ymin,xmax,ymax), 
+              datetime = time_range) %>%
     post_request() %>% items_fetch() 
   # Assign to global variable for stac_items
   stac_items <<- items          
 }
 
-#* Create datacube(gdalcubes) for your region of interest
+#* Loads a collection and returns a processable data cube(gdalcube).
+#* @param collection 
+#* @param bbox 
+#* @param time_range 
+#* @param bands
+#* @param spatial_resolution
 #* @get /v1/processes/open-eo/load_collection
 #* @serializer unboxedJSON
-function() {
+function(collection ="sentinel-s2-l2a-cogs", bbox ="6.1,46.2,6.2,46.3", 
+         time_range ="2021-01-01/2021-06-30", bands = "B04,B08", spatial_resolution="250") {
+  
+  load_collection <- function(id = collection, spatial_extent = bbox,
+                              temporal_extent = time_range, bands = bands){
+    
+  }
   # create image collection from stac items features
   img.col <- stac_image_collection(
     stac_items$features

@@ -65,22 +65,58 @@ function(xmin = "6.1", ymin = "46.8", xmax = "6.2", ymax = "46.3", time_range = 
 #* @get /v1/processes/open-eo/load_collection
 #* @serializer unboxedJSON
 function(collection ="sentinel-s2-l2a-cogs", bbox ="6.1,46.2,6.2,46.3", 
-         time_range ="2021-01-01/2021-06-30", bands = "B04,B08", spatial_resolution="250") {
+         time_range ="2021-01-01/2021-06-30", bands = "B04,B08", spatial_resolution="250",
+         temporal_resolution = "P1M") {
   
-  load_collection <- function(id = collection, spatial_extent = bbox,
-                              temporal_extent = time_range, bands = bands){
+  load_collection <- function(id = collection, bbox = bbox,
+                              temporal_extent = time_range, bands = bands,
+                              spatial_resolution=spatial_resolution,
+                              temporal_resolution =temporal_resolution){
+    ##bbox to numeric
+    bbox.split <- str_split(bbox, ",")
+    bbox.unlist <- unlist(bbox.split)
+    xmin <- as.numeric(bbox.unlist[1])
+    ymin <- as.numeric(bbox.unlist[2])
+    xmax <- as.numeric(bbox.unlist[3])
+    ymax <- as.numeric(bbox.unlist[4])
+    #Connect to STAC API and get sentinel data
+    stac_object = stac("https://earth-search.aws.element84.com/v0")
+    items = stac_object %>%
+      stac_search(collections = collection,
+                  bbox = c(xmin,ymin,xmax,ymax), 
+                  datetime = temporal_extent) %>%
+      post_request() %>% items_fetch() 
+    # create image collection from stac items features
+    img.col <- stac_image_collection(
+       items$features
+    )
+    # Define cube view with monthly aggregation, 250 Metres dimension
+    spatial_resolution <- as.numeric(spatial_resolution)
+    v.overview = cube_view(srs="EPSG:3857", extent=img.col,
+                           dx=spatial_resolution, dy=spatial_resolution, 
+                           dt = temporal_resolution, resampling="average", aggregation="median")
+    ### data cube
+    if(bands==""){
+      # gdalcubes creation
+      cube = raster_cube(img.col, v.overview)
+      return(cube)
+    }else{
+      #split user input
+      bands.split <- str_split(bands, ",")
+      bands.unlist <- unlist(bands.split)
+      # gdalcubes creation with band filtering
+      cube = raster_cube(img.col, v.overview)%>%
+             select_bands(bands.unlist)
+      return(cube)
+    }
     
   }
-  # create image collection from stac items features
-  img.col <- stac_image_collection(
-    stac_items$features
-  )
-  
-  # Define cube view with monthly aggregation, 100 Metres dimension
-  v.overview = cube_view(srs="EPSG:3857", extent=img.col, dx=200, dy=200, dt = "P1M", resampling="average", aggregation="median")
-  
-  # gdalcubes creation
-  cube.overview = raster_cube(img.col, v.overview)
+
+  # gdalcube main call
+  cube.overview = load_collection(id = collection, bbox = bbox,
+                                  temporal_extent = time_range, bands = bands,
+                                  spatial_resolution=spatial_resolution,
+                                  temporal_resolution =temporal_resolution)
   # Assign to a global variable
   data_cube <<- cube.overview
   
@@ -155,7 +191,7 @@ function(west="", south="", east="", north=""){
 function(process =""){
   # apply function
   apply <- function(data = data, process = process){
-    if(is.null(data) ||  is.null(process) || is.empty(data) ||  is.empty(process)){
+    if(is.empty(data) ||  is.empty(process)){
       stop("The cubes or process cannot be null or empty")
     }
     cube <- apply_pixel(data, process)
@@ -250,7 +286,7 @@ function(user_defined_process) {
 function(format=""){
   #save_result, Default format is tif
   save_result <- function(data,format){
-    if(is.null(format)| tolower(format) =="tiff"  | format =="") {
+    if(is.null(format) || tolower(format) =="tiff" || format =="") {
       write_tif(data, tempfile(pattern = "cube", tmpdir = getwd(),fileext = ".tif"))
     }else if(tolower(format) =="netcdf"){
       write_ncdf(data, tempfile(pattern = "cube", tmpdir = getwd(),fileext = ".nc"))

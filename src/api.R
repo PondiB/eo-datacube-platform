@@ -133,16 +133,14 @@ function() {
 #* @param bands B04,B08
 #* @post /v1/processes/open-eo/filter_bands
 function(bands = "") {
-
-  #split user input
-  bands.split <- str_split(bands, ",")
-  bands.unlist <- unlist(bands.split)
-    
   # filter bands function
   filter_bands <- function(data = data, bands = bands){
     if(is.null(bands)){
       stop("The bands values should not be empty")
     }
+    #split user input
+    bands.split <- str_split(bands, ",")
+    bands.unlist <- unlist(bands.split)
     cube = select_bands(data, bands.unlist)
     return(cube)
   }
@@ -155,12 +153,9 @@ function(bands = "") {
 }
 
 #* Limits the data cube to the specified bounding box.
-#* @param west 6.1
-#* @param south 46.8
-#* @param east 6.2
-#* @param north 46.3
+#* @param bbox 6.1,46.8,6.2,46.3
 #* @post /v1/processes/open-eo/filter_bbox
-function(west="", south="", east="", north=""){
+function(bbox = "6.1,46.8,6.2,46.3"){
   #Convert to numeric
   west <- as.numeric(west)
   south <- as.numeric(south)
@@ -168,12 +163,30 @@ function(west="", south="", east="", north=""){
   north <- as.numeric(north)
   
   # filter bbox function
-  filter_bbox <- function(data = data, extent = extent){
+  filter_bbox <- function(data, bbox){
     #TO DO
+    ##bbox to numeric
+    bbox.split <- str_split(bbox, ",")
+    bbox.unlist <- unlist(bbox.split)
+    xmin <- as.numeric(bbox.unlist[1])
+    ymin <- as.numeric(bbox.unlist[2])
+    xmax <- as.numeric(bbox.unlist[3])
+    ymax <- as.numeric(bbox.unlist[4])
+    
+    ##create sf points
+    pt1 <- st_point(c(xmin,ymin))
+    pt2 <- st_point(c(xmin,ymax))
+    pt3 <- st_point(c(xmax,ymin))
+    pt4 <- st_point(c(xmax,ymax))
+    pt5 <- st_point(c(xmin,ymin))
+    
+    pts <- list(pt1, pt2, pt3, pt4, pt5)
+    
+    st_polygon(as.matrix(pts))
     
   }
   #call the function
-  data_cube.filt <- filter_bbox(data = data_cube, extent = extent)
+  data_cube.filt <- filter_bbox(data = data_cube,bbox)
   # rewrite filtered cubes to the global variable
   data_cube <<- data_cube.filt
   # Response msg to user

@@ -157,12 +157,7 @@ function(bands = "") {
 #* @param bbox 6.1,46.8,6.2,46.3
 #* @post /v1/processes/open-eo/filter_bbox
 function(bbox = "6.1,46.8,6.2,46.3"){
-  #Convert to numeric
-  west <- as.numeric(west)
-  south <- as.numeric(south)
-  east <- as.numeric(east)
-  north <- as.numeric(north)
-  
+ 
   # filter bbox function
   filter_bbox <- function(data, bbox){
     #TO DO
@@ -216,13 +211,34 @@ function(process =""){
   
 }
 
+#* Renames a dimension in the data cube while preserving all other properties
+#* @param dimension bands
+#* @param target red
+#* @param source B1
+#* @post /v1/processes/open-eo/rename_dimension
+function( source="B1", target="red"){
+  
+  rename_dimension <- function(data, source, target){
+    cube <- rename_bands(data, source = target)
+    return(cube)
+  }
+  #execute
+  data_cube.rename <- rename_dimension(data = data_cube, source, target)
+  #override global
+  data_cube <<- data_cube.rename
+  # Response msg to user
+  msg <- list(status = "SUCCESS", code = "200",message ="Renaming of dimension applied")
+}
+
 #* Rename dimension labels
 #* @param dimension bands
 #* @param target
 #* @param source
-#* @post /v1/processes/open-eo/rename_laabels
+#* @post /v1/processes/open-eo/rename_labels
 function(dimension="bands", target="red,green,blue", source="B1,B2,B3"){
-  
+  rename_labels <- function(data, source, target){
+    
+  }
 }
 
 

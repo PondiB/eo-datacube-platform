@@ -216,6 +216,16 @@ function(process =""){
   
 }
 
+#* Rename dimension labels
+#* @param dimension bands
+#* @param target
+#* @param source
+#* @post /v1/processes/open-eo/rename_laabels
+function(dimension="bands", target="red,green,blue", source="B1,B2,B3"){
+  
+}
+
+
 #* Reduce dimensions
 #* @param reducer
 #* @param dimension time or bands

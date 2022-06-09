@@ -31,6 +31,15 @@ data_cube <- NULL
 #* @apiDescription This service integrates STAC API, OpenEO standards and gdalcubes to be a lightweight platform to enable processing of time series satellite images.
 
 
+#* List of implemented OpenEO processes
+#* @get /v1/processes/open-eo/list
+function() {
+  # TO DO, Implement some openeo processes that work on a raster-cube
+  # https://processes.openeo.org
+  processes_list <- list("apply","filter_bands", "filter_bbox", "resample_spatial","load_collection",
+                         "merge_cubes","reduce_dimension","rename_dimension","rename_labels","run_udf", "save_result","trim_cube")
+}
+
 #* Discover available satellite imagery in your region of interest
 #* @param xmin 6.1
 #* @param ymin 46.8
@@ -62,7 +71,7 @@ function(xmin = "6.1", ymin = "46.8", xmax = "6.2", ymax = "46.3", time_range = 
 #* @param time_range 
 #* @param bands
 #* @param spatial_resolution
-#* @get /v1/processes/open-eo/load_collection
+#* @post /v1/processes/open-eo/load_collection
 #* @serializer unboxedJSON
 function(collection ="sentinel-s2-l2a-cogs", bbox ="6.1,46.2,6.2,46.3", 
          time_range ="2021-01-01/2021-06-30", bands = "B04,B08", spatial_resolution="250",
@@ -120,14 +129,6 @@ function(collection ="sentinel-s2-l2a-cogs", bbox ="6.1,46.2,6.2,46.3",
   msg <- list(status = "SUCCESS", code = "200",message ="gdalcubes object created successfully")
 }
 
-#* Get list of OpenEO processes
-#* @get /v1/processes/open-eo/list
-function() {
-  # TO DO, Implement some openeo processes that work on a raster-cube
-  # https://processes.openeo.org
-  processes_list <- list("apply","filter_bands", "filter_bbox", "resample_spatial","load_collection",
-                         "merge_cubes","reduce_dimension","rename_dimension","rename_labels","run_udf", "save_result","trim_cube")
-}
 
 #* Select bands from gdalcube
 #* @param bands B04,B08
@@ -272,7 +273,9 @@ function(other_cube = ""){
     cube = join_bands(c(cube1, cube2))
     return(cube)
   }
-  merge_cubes(data_cube, other_cube)
+  data_cube.merge <- merge_cubes(data_cube, other_cube)
+  
+  data_cube <<- data_cube.merge
   # Response msg to user
   msg <- list(status = "SUCCESS", code = "200",message ="Process applied successfully")
   
@@ -280,13 +283,28 @@ function(other_cube = ""){
 
 
 #* Run a user defined process on gdalcubes
-#* @param user_defined_process User-defined function
+#* @param udf User-defined function
 #* @post /v1/processes/open-eo/run_udf
-function(user_defined_process) {
-  #focus on apply pixel for a start
-    func_parse <- parse(text = user_defined_process)
+function(udf="") {
+  #focus on apply pixel or reduce time for a start
+  run_udf <- function(data, udf, runtime=NULL){
+    #convert parsed string function to class function
+    func_parse <- parse(text = udf)
     user_function <- eval(func_parse)
-    results <- data_cube %>% reduce_time(names= c("test_1", "test_2"),FUN = user_function)
+    #TO DO, how to identify a reduce or apply process
+    if(process =="reduce"){
+      results <- reduce_time(data,FUN = user_function)
+    }else if (process = "apply"){
+      results <- apply_pixel(data,FUN = user_function)
+    }
+    return(results)
+  }
+  data_cube.udf <- run_udf(data_cube, udf)
+  
+  data_cube <<- data_cube.udf
+  # Response msg to user
+  msg <- list(status = "SUCCESS", code = "200",message ="UDF  applied successfully")
+    
 }
 
 #* Save processed data

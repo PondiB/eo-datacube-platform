@@ -304,7 +304,7 @@ function(udf="") {
     #TO DO, how to identify a reduce or apply process
     if(process =="reduce"){
       results <- reduce_time(data,FUN = user_function)
-    }else if (process = "apply"){
+    }else if (process == "apply"){
       results <- apply_pixel(data,FUN = user_function)
     }
     return(results)

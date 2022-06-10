@@ -41,14 +41,14 @@ function() {
 }
 
 #* Discover available satellite imagery in your region of interest
-#* @param xmin 6.1
-#* @param ymin 46.8
-#* @param xmax 6.2
-#* @param ymax 46.3
+#* @param xmin 7.1
+#* @param ymin 51.8
+#* @param xmax 7.2
+#* @param ymax 52.8
 #* @param time_range 2021-01-01/2021-06-31
 #* @param collection  sentinel-s2-l2a-cogs
 #* @get /v1/stac/discover-data
-function(xmin = "6.1", ymin = "46.8", xmax = "6.2", ymax = "46.3", time_range = "2021-01-01/2021-06-30", collection = "sentinel-s2-l2a-cogs") {
+function(xmin = "7.1", ymin = "51.8", xmax = "7.2", ymax = "52.8", time_range = "2021-01-01/2021-06-30", collection = "sentinel-s2-l2a-cogs") {
   #Convert bbox values to numeric
   xmin <- as.numeric(xmin)
   ymin <- as.numeric(ymin)
@@ -73,7 +73,7 @@ function(xmin = "6.1", ymin = "46.8", xmax = "6.2", ymax = "46.3", time_range = 
 #* @param spatial_resolution
 #* @post /v1/processes/open-eo/load_collection
 #* @serializer unboxedJSON
-function(collection ="sentinel-s2-l2a-cogs", bbox ="6.1,46.2,6.2,46.3", 
+function(collection ="sentinel-s2-l2a-cogs", bbox ="7.1,51.8,7.2,52.8", 
          time_range ="2021-01-01/2021-06-30", bands = "B04,B08", spatial_resolution="250",
          temporal_resolution = "P1M") {
   
@@ -112,7 +112,6 @@ function(collection ="sentinel-s2-l2a-cogs", bbox ="6.1,46.2,6.2,46.3",
       bands.unlist <- unlist(bands.split)
       # gdalcubes creation with band filtering
       cube = select_bands(cube, bands.unlist)
-      return(cube)
     }
     return(cube)
   }
@@ -154,13 +153,12 @@ function(bands = "") {
 }
 
 #* Limits the data cube to the specified bounding box.
-#* @param bbox 6.1,46.8,6.2,46.3
+#* @param bbox 7.1,51.8,7.2,52.8
 #* @post /v1/processes/open-eo/filter_bbox
-function(bbox = "6.1,46.8,6.2,46.3"){
+function(bbox = "7.1,51.8,7.2,52.8"){
  
   # filter bbox function
   filter_bbox <- function(data, bbox){
-    #TO DO
     ##bbox to numeric
     bbox.split <- str_split(bbox, ",")
     bbox.unlist <- unlist(bbox.split)
@@ -172,13 +170,18 @@ function(bbox = "6.1,46.8,6.2,46.3"){
     ##create sf points
     pt1 <- st_point(c(xmin,ymin))
     pt2 <- st_point(c(xmin,ymax))
-    pt3 <- st_point(c(xmax,ymin))
-    pt4 <- st_point(c(xmax,ymax))
+    pt3 <- st_point(c(xmax,ymax))
+    pt4 <- st_point(c(xmax,ymin))
     pt5 <- st_point(c(xmin,ymin))
     
-    pts <- list(pt1, pt2, pt3, pt4, pt5)
+    ##create polygon
+    pts <- list(rbind(pt1, pt2, pt3, pt4, pt5))
+    poly <- st_polygon(pts)
+    poly <-st_sfc(poly,crs = 3857)
     
-    st_polygon(as.matrix(pts))
+    #filter data cube
+    cube <- filter_geom(data,poly)
+    return(cube)
     
   }
   #call the function

@@ -190,26 +190,6 @@ function(bbox = "6.1,46.8,6.2,46.3"){
 
 }
 
-#* Apply a process to each pixel
-#* @param process (B05-B04)/(B05+B04)
-#* @post /v1/processes/open-eo/apply
-function(process =""){
-  # apply function
-  apply <- function(data = data, process = process){
-    if(is.empty(data) ||  is.empty(process)){
-      stop("The cubes or process cannot be null or empty")
-    }
-    cube <- apply_pixel(data, process)
-    return(cube)
-  }
-  #call the function
-  data_cube.applied <- filter_bbox(data = data_cube, process)
-  # rewrite filtered cubes to the global variable
-  data_cube <<- data_cube.applied
-  # Response msg to user
-  msg <- list(status = "SUCCESS", code = "200",message ="Process applied successfully")
-  
-}
 
 #* Renames a dimension in the data cube while preserving all other properties
 #* @param dimension bands
@@ -288,7 +268,7 @@ function(other_cube = ""){
   merge_cubes <- function(datacube1 , datacube2){
     #check if they are not datacubes
     `%!in%` <- Negate(`%in%`)
-    if("cube" %!in% class(datacube1) && "cube" %!in% class(datacube1)) {
+    if("cube" %!in% class(datacube1) && "cube" %!in% class(datacube2)) {
       stop('Provided cubes are not of class "cube"')
     }
     #check if the datacubes have equal dimesions

@@ -9,6 +9,7 @@ library(uuid)
 library(magrittr)
 library(bfast)
 library(tidyverse)
+library(geojsonR)
 
 
 # Additonal set ups
@@ -106,7 +107,7 @@ function(collection ="sentinel-s2-l2a-cogs", bbox ="7.1,51.8,7.2,52.8",
                            dt = temporal_resolution, resampling="average", aggregation="median")
     # gdalcubes creation
     cube = raster_cube(img.col, v.overview)
-    if(bands != ""|| ! is.null(bands)){
+    if(! is.null(bands)){
       #split user input
       bands.split <- str_split(bands, ",")
       bands.unlist <- unlist(bands.split)
@@ -134,7 +135,7 @@ function(collection ="sentinel-s2-l2a-cogs", bbox ="7.1,51.8,7.2,52.8",
 #* @post /v1/processes/open-eo/filter_bands
 function(bands = "") {
   # filter bands function
-  filter_bands <- function(data = data, bands = bands){
+  filter_bands <- function(data, bands){
     if(is.null(bands)){
       stop("The bands values should not be empty")
     }
@@ -145,7 +146,7 @@ function(bands = "") {
     return(cube)
   }
   #call the function
-  data_cube.filt <- filter_bands(data = data_cube, bands = bands)
+  data_cube.filt <- filter_bands(data = data_cube, bands)
   # rewrite filtered cubes to the global variable
   data_cube <<- data_cube.filt
   # Response msg to user
@@ -194,12 +195,24 @@ function(bbox = "7.1,51.8,7.2,52.8"){
 }
 
 
+#* Spatial filter using geometries.
+#* @param geometries 
+#* @post /v1/processes/open-eo/filter_spatial
+function(geometries = ""){
+  # filter spatial function
+  filter_spatial <- function(data, geometries){
+    #TO DO
+  }
+  
+}
+
+
 #* Renames a dimension in the data cube while preserving all other properties
 #* @param dimension bands
 #* @param target red
-#* @param source B1
+#* @param source B01
 #* @post /v1/processes/open-eo/rename_dimension
-function( source="B1", target="red"){
+function( source="B01", target="red"){
   
   rename_dimension <- function(data, source, target){
     cube <- rename_bands(data, source = target)
@@ -215,10 +228,10 @@ function( source="B1", target="red"){
 
 #* Rename dimension labels
 #* @param dimension bands
-#* @param target
-#* @param source
+#* @param target red,green,blue
+#* @param source B01,B02,B03
 #* @post /v1/processes/open-eo/rename_labels
-function(dimension="bands", target="red,green,blue", source="B1,B2,B3"){
+function(dimension="bands", target="red,green,blue", source="B01,B02,B03"){
   rename_labels <- function(data, source, target){
     
   }

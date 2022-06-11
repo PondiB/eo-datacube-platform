@@ -18,6 +18,7 @@ RUN install2.r --error \
     RColorBrewer \
     bfast \
     tidyverse \
+    geojsonR \
     magrittr
 
 COPY . .

@@ -207,6 +207,27 @@ function(geometries = ""){
 }
 
 
+
+#* Temporal filter based on temporal intervals.
+#* @param extent 2022-01-01,2022-03-30
+#* @post /v1/processes/open-eo/filter_temporal
+function(extent = "2021-01-01,2021-03-30"){
+  # filter temporal function
+  filter_temporal <- function(data, extent){
+    #TO DO
+    extent.split <- str_split(extent, ",")
+    extent.unlist <- unlist(extent.split)
+    select_time(data, c(extent.unlist[1], extent.unlist[2]))
+  }
+  #call the function
+  data_cube.time <- filter_temporal(data = data_cube,extent)
+  # overwrite global variable
+  data_cube <<- data_cube.time
+  # Response msg to user
+  msg <- list(status = "SUCCESS", code = "200",message ="gdalcubes filtered by time interval successfully")
+  
+}
+
 #* Renames a dimension in the data cube while preserving all other properties
 #* @param dimension bands
 #* @param target red

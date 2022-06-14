@@ -1,5 +1,9 @@
-# Earth observation Lightweight Platform
-A lightweight platform to analyze Earth observation data cubes in the cloud
+# Lightweight Platform for Processing Time Series Satellite Images
+
+This service integrates STAC API, OpenEO standards and gdalcubes(Data Cubes) to be a  lightweight platform to enable processing of time series satellite images via RESTful APIs. It also supports users to run their custom R functions.
+
+
+![](assets/lightweight-architecture.png)
 
 
 ## Easy Deployment with Docker

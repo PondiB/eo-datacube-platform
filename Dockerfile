@@ -19,6 +19,7 @@ RUN install2.r --error \
     bfast \
     tidyverse \
     geojsonR \
+    devtools \
     magrittr
 
 COPY . .

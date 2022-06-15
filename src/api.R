@@ -59,29 +59,26 @@ function(xmin = "7.1", ymin = "51.8", xmax = "7.2", ymax = "52.8", time_range = 
   stac_object = stac("https://earth-search.aws.element84.com/v0")
   items = stac_object %>%
     stac_search(collections = collection,
-              bbox = c(xmin,ymin,xmax,ymax), 
+              bbox = c(xmin,ymin,xmax,ymax),
               datetime = time_range) %>%
-    post_request() %>% items_fetch() 
+    post_request() %>% items_fetch()
   # Assign to global variable for stac_items
-  stac_items <<- items          
+  stac_items <<- items
 }
 
 #* Loads a collection and returns a processable data cube(gdalcube).
-#* @param collection 
-#* @param bbox 
-#* @param time_range 
-#* @param bands
-#* @param spatial_resolution
+#* @param id collection
+#* @param bbox bounding box of ROI
+#* @param temporal_extent time range of interest
+#* @param bands bands of interest
+#* @param spatial_resolution Resample value
+#* @param temporal_resolution P1M = Monthly, P3M = Quarterly
 #* @post /v1/processes/open-eo/load_collection
 #* @serializer unboxedJSON
-function(collection ="sentinel-s2-l2a-cogs", bbox ="7.1,51.8,7.2,52.8", 
-         time_range ="2021-01-01/2021-06-30", bands = "B04,B08", spatial_resolution="250",
-         temporal_resolution = "P1M") {
-  
-  load_collection <- function(id = collection, bbox = bbox,
-                              temporal_extent = time_range, bands = bands,
-                              spatial_resolution=spatial_resolution,
-                              temporal_resolution =temporal_resolution){
+load_collection <- function(id ="sentinel-s2-l2a-cogs", bbox ="7.1,51.8,7.2,52.8",
+                            temporal_extent ="2021-01-01/2021-06-30", bands = "B04,B08", spatial_resolution="250",
+         temporal_resolution = "P1M"){
+
     ##bbox to numeric
     bbox.split <- str_split(bbox, ",")
     bbox.unlist <- unlist(bbox.split)
@@ -92,10 +89,10 @@ function(collection ="sentinel-s2-l2a-cogs", bbox ="7.1,51.8,7.2,52.8",
     #Connect to STAC API and get sentinel data
     stac_object = stac("https://earth-search.aws.element84.com/v0")
     items = stac_object %>%
-      stac_search(collections = collection,
-                  bbox = c(xmin,ymin,xmax,ymax), 
+      stac_search(collections = id,
+                  bbox = c(xmin,ymin,xmax,ymax),
                   datetime = temporal_extent) %>%
-      post_request() %>% items_fetch() 
+      post_request() %>% items_fetch()
     # create image collection from stac items features
     img.col <- stac_image_collection(
        items$features
@@ -103,7 +100,7 @@ function(collection ="sentinel-s2-l2a-cogs", bbox ="7.1,51.8,7.2,52.8",
     # Define cube view with monthly aggregation, 250 Metres dimension
     spatial_resolution <- as.numeric(spatial_resolution)
     v.overview = cube_view(srs="EPSG:3857", extent=img.col,
-                           dx=spatial_resolution, dy=spatial_resolution, 
+                           dx=spatial_resolution, dy=spatial_resolution,
                            dt = temporal_resolution, resampling="average", aggregation="median")
     # gdalcubes creation
     cube = raster_cube(img.col, v.overview)
@@ -114,17 +111,10 @@ function(collection ="sentinel-s2-l2a-cogs", bbox ="7.1,51.8,7.2,52.8",
       # gdalcubes creation with band filtering
       cube = select_bands(cube, bands.unlist)
     }
-    return(cube)
-  }
 
-  # gdalcube main call
-  cube.overview = load_collection(id = collection, bbox = bbox,
-                                  temporal_extent = time_range, bands = bands,
-                                  spatial_resolution=spatial_resolution,
-                                  temporal_resolution =temporal_resolution)
   # Assign to a global variable
-  data_cube <<- cube.overview
-  
+   data_cube <<- cube
+
   # Response msg to user
   msg <- list(status = "SUCCESS", code = "200",message ="gdalcubes object created successfully")
 }
@@ -157,7 +147,7 @@ function(bands = "") {
 #* @param bbox 7.1,51.8,7.2,52.8
 #* @post /v1/processes/open-eo/filter_bbox
 function(bbox = "7.1,51.8,7.2,52.8"){
- 
+
   # filter bbox function
   filter_bbox <- function(data, bbox){
     ##bbox to numeric
@@ -167,23 +157,23 @@ function(bbox = "7.1,51.8,7.2,52.8"){
     ymin <- as.numeric(bbox.unlist[2])
     xmax <- as.numeric(bbox.unlist[3])
     ymax <- as.numeric(bbox.unlist[4])
-    
+
     ##create sf points
     pt1 <- st_point(c(xmin,ymin))
     pt2 <- st_point(c(xmin,ymax))
     pt3 <- st_point(c(xmax,ymax))
     pt4 <- st_point(c(xmax,ymin))
     pt5 <- st_point(c(xmin,ymin))
-    
+
     ##create polygon
     pts <- list(rbind(pt1, pt2, pt3, pt4, pt5))
     poly <- st_polygon(pts)
     poly <-st_sfc(poly,crs = 3857)
-    
+
     #filter data cube
     cube <- filter_geom(data,poly)
     return(cube)
-    
+
   }
   #call the function
   data_cube.filt <- filter_bbox(data = data_cube,bbox)
@@ -196,14 +186,14 @@ function(bbox = "7.1,51.8,7.2,52.8"){
 
 
 #* Spatial filter using geometries.
-#* @param geometries 
+#* @param geometries
 #* @post /v1/processes/open-eo/filter_spatial
 function(geometries = ""){
   # filter spatial function
   filter_spatial <- function(data, geometries){
     #TO DO
   }
-  
+
 }
 
 
@@ -225,7 +215,7 @@ function(extent = "2021-01-01,2021-03-30"){
   data_cube <<- data_cube.time
   # Response msg to user
   msg <- list(status = "SUCCESS", code = "200",message ="gdalcubes filtered by time interval successfully")
-  
+
 }
 
 #* Renames a dimension in the data cube while preserving all other properties
@@ -234,7 +224,7 @@ function(extent = "2021-01-01,2021-03-30"){
 #* @param source B01
 #* @post /v1/processes/open-eo/rename_dimension
 function( source="B01", target="red"){
-  
+
   rename_dimension <- function(data, source, target){
     cube <- rename_bands(data, source = target)
     return(cube)
@@ -254,7 +244,7 @@ function( source="B01", target="red"){
 #* @post /v1/processes/open-eo/rename_labels
 function(dimension="bands", target="red,green,blue", source="B01,B02,B03"){
   rename_labels <- function(data, source, target){
-    
+
   }
 }
 
@@ -267,19 +257,19 @@ function(reducer="", dimension=""){
   #reduce dimensions function
   reduce_dimension <-function(data,reducer, dimension){
     if(dimension == "time") {
-      
+
       bands = bands(data)$name
       bandStr = c()
-      
+
       for (i in 1:length(bands)) {
         bandStr = append(bandStr, sprintf("%s(%s)", reducer, bands[i]))
       }
-      
+
       cube = reduce_time(data, bandStr)
       return(cube)
     }
     else if (dimension == "bands") {
-      
+
       cube = apply_pixel(data, reducer, keep_bands = FALSE)
       return(cube)
     }
@@ -293,7 +283,7 @@ function(reducer="", dimension=""){
   data_cube <<- data_cube.reduced
   # Response msg to user
   msg <- list(status = "SUCCESS", code = "200",message ="Dimensions reduced successfully")
-  
+
 }
 
 
@@ -317,11 +307,11 @@ function(other_cube = ""){
     return(cube)
   }
   data_cube.merge <- merge_cubes(data_cube, other_cube)
-  
+
   data_cube <<- data_cube.merge
   # Response msg to user
   msg <- list(status = "SUCCESS", code = "200",message ="Process applied successfully")
-  
+
 }
 
 
@@ -343,11 +333,11 @@ function(udf="") {
     return(results)
   }
   data_cube.udf <- run_udf(data_cube, udf)
-  
+
   data_cube <<- data_cube.udf
   # Response msg to user
   msg <- list(status = "SUCCESS", code = "200",message ="UDF  applied successfully")
-    
+
 }
 
 #* Save processed data
@@ -368,7 +358,7 @@ function(format=""){
   save_result(data = data_cube, format = format)
   # Response msg to user
   msg <- list(status = "SUCCESS", code = "200",message ="Processed data saved successfully")
-  
+
 }
 
 #* Plot processed datacube

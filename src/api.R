@@ -10,6 +10,7 @@ library(magrittr)
 library(bfast)
 library(tidyverse)
 library(geojsonR)
+library(botor)
 
 
 # Additonal set ups
@@ -21,6 +22,8 @@ options(warn=-1)
 
 #set workdir
 setwd(".")
+dir.create("data")
+setwd("./data")
 
 # gdalcube global variable
 stac_items <- NULL
@@ -44,7 +47,7 @@ processes_list <- function() {
 #* @param ymin 51.8
 #* @param xmax 7.2
 #* @param ymax 52.8
-#* @param time_range 2021-01-01/2021-06-31
+#* @param time_range 2021-01-01/2021-06-30
 #* @param collection  sentinel-s2-l2a-cogs
 #* @get /v1/stac/discover_data
 discover_data <- function(xmin = "7.1", ymin = "51.8", xmax = "7.2", ymax = "52.8", time_range = "2021-01-01/2021-06-30", collection = "sentinel-s2-l2a-cogs") {
@@ -74,9 +77,8 @@ discover_data <- function(xmin = "7.1", ymin = "51.8", xmax = "7.2", ymax = "52.
 #* @post /v1/processes/open-eo/load_collection
 #* @serializer unboxedJSON
 load_collection <- function(id ="sentinel-s2-l2a-cogs", bbox ="7.1,51.8,7.2,52.8",
-                            temporal_extent ="2021-01-01/2021-06-30", bands = "B04,B08", spatial_resolution="250",
-         temporal_resolution = "P1M"){
-
+                            temporal_extent ="2021-01-01/2021-06-30", bands = "B04,B08",
+                            spatial_resolution="250",temporal_resolution = "P1M"){
     ##bbox to numeric
     bbox.split <- str_split(bbox, ",")
     bbox.unlist <- unlist(bbox.split)
@@ -173,11 +175,8 @@ filter_bbox <- function(data = data_cube, bbox = "7.1,51.8,7.2,52.8"){
 #* Spatial filter using geometries.
 #* @param geometries
 #* @post /v1/processes/open-eo/filter_spatial
-function(geometries = ""){
-  # filter spatial function
-  filter_spatial <- function(data, geometries){
-    #TO DO
-  }
+filter_spatial <- function(data = data_cube,geometries = ""){
+
 
 }
 
@@ -218,10 +217,9 @@ rename_dimension <- function(data=data_cube, source="B01", target="red"){
 #* @param target red,green,blue
 #* @param source B01,B02,B03
 #* @post /v1/processes/open-eo/rename_labels
-function(dimension="bands", target="red,green,blue", source="B01,B02,B03"){
-  rename_labels <- function(data, source, target){
+rename_labels <- function(data  = data_cube,dimension="bands", target="red,green,blue", source="B01,B02,B03"){
 
-  }
+
 }
 
 
@@ -318,17 +316,27 @@ save_result <- function(data,format="TIFF"){
   msg <- list(status = "SUCCESS", code = "200",message ="Processed data saved successfully")
 }
 
+
+
+#* Export files to aws s3 bucket
+#* @post /v1/export_to_s3
+export_to_s3 <- function() {
+
+}
+
 #* Plot processed datacube
 #* @get /v1/plot/datacube
 #* @serializer png
 function() {
-    # plot images
-    data_cube.plot <- data_cube %>% plot
+  # plot images
+  data_cube.plot <- data_cube %>% plot
 }
-
 
 #* Delete all files
 #* @delete /v1/files
-function() {
-    #Delete files
+delete_files <- function() {
+  # delete a directory
+  unlink("./data", recursive = TRUE)
+  # Response msg to user
+  msg <- list(status = "SUCCESS", code = "200",message ="All the processed files deleted")
 }

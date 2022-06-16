@@ -1,6 +1,6 @@
 # Brian Pondi
 # 20-04-2022
-#
+# API endpoints with some of the implemented openEo processes for cube objects
 
 # Import relevant libs
 library(rstac)
@@ -18,8 +18,6 @@ gdalcubes_options(parallel = 16)
 #Surpress warnings
 options(warn=-1)
 
-# Import OpenEO implemented funcions
-# source("./R/openeo-processes.R")
 
 #set workdir
 setwd(".")
@@ -231,9 +229,7 @@ function(dimension="bands", target="red,green,blue", source="B01,B02,B03"){
 #* @param reducer
 #* @param dimension time or bands
 #* @post /v1/processes/open-eo/reduce_dimension
-function(reducer="", dimension=""){
-  #reduce dimensions function
-  reduce_dimension <-function(data,reducer, dimension){
+reduce_dimension <-function(data = data_cube,reducer="", dimension=""){
     if(dimension == "time") {
 
       bands = bands(data)$name
@@ -254,11 +250,9 @@ function(reducer="", dimension=""){
     else {
       stop('Kindly select "time" or "bands" as dimension')
     }
-  }
-  #call the function
-  data_cube.reduced <- reduce_dimension(data = data_cube, reducer, dimension)
+
   # rewrite cubes to the global variable
-  data_cube <<- data_cube.reduced
+  data_cube <<- cube
   # Response msg to user
   msg <- list(status = "SUCCESS", code = "200",message ="Dimensions reduced successfully")
 
@@ -311,9 +305,7 @@ run_udf <- function(data= data_cube, udf="", runtime=NULL){
 #* Save processed data
 #* @param format TIFF or NetCDF
 #* @post /v1/processes/open-eo/save_result
-function(format=""){
-  #save_result, Default format is tif
-  save_result <- function(data,format){
+save_result <- function(data,format="TIFF"){
     if(is.null(format) || tolower(format) =="tiff" || format =="") {
       write_tif(data, tempfile(pattern = "cube", tmpdir = getwd(),fileext = ".tif"))
     }else if(tolower(format) =="netcdf"){
@@ -321,12 +313,9 @@ function(format=""){
     }else{
       stop("The format entered is not supported")
     }
-  }
-  #call the function
-  save_result(data = data_cube, format = format)
+
   # Response msg to user
   msg <- list(status = "SUCCESS", code = "200",message ="Processed data saved successfully")
-
 }
 
 #* Plot processed datacube

@@ -34,11 +34,11 @@ data_cube <- NULL
 
 #* List of implemented OpenEO processes
 #* @get /v1/processes/open-eo/list
-function() {
+processes_list <- function() {
   # TO DO, Implement some openeo processes that work on a raster-cube
   # https://processes.openeo.org
-  processes_list <- list("apply","filter_bands", "filter_bbox", "resample_spatial","load_collection",
-                         "merge_cubes","reduce_dimension","rename_dimension","rename_labels","run_udf", "save_result","trim_cube")
+  processes_list <- list("filter_bands", "filter_bbox","filter_spatial", "filter_temporal","load_collection",
+                         "merge_cubes","reduce_dimension","rename_dimension","rename_labels","run_udf", "save_result")
 }
 
 #* Discover available satellite imagery in your region of interest
@@ -48,8 +48,8 @@ function() {
 #* @param ymax 52.8
 #* @param time_range 2021-01-01/2021-06-31
 #* @param collection  sentinel-s2-l2a-cogs
-#* @get /v1/stac/discover-data
-function(xmin = "7.1", ymin = "51.8", xmax = "7.2", ymax = "52.8", time_range = "2021-01-01/2021-06-30", collection = "sentinel-s2-l2a-cogs") {
+#* @get /v1/stac/discover_data
+discover_data <- function(xmin = "7.1", ymin = "51.8", xmax = "7.2", ymax = "52.8", time_range = "2021-01-01/2021-06-30", collection = "sentinel-s2-l2a-cogs") {
   #Convert bbox values to numeric
   xmin <- as.numeric(xmin)
   ymin <- as.numeric(ymin)
@@ -123,9 +123,7 @@ load_collection <- function(id ="sentinel-s2-l2a-cogs", bbox ="7.1,51.8,7.2,52.8
 #* Select bands from gdalcube
 #* @param bands B04,B08
 #* @post /v1/processes/open-eo/filter_bands
-function(bands = "") {
-  # filter bands function
-  filter_bands <- function(data, bands){
+filter_bands <- function( data= data_cube, bands="B04,B08"){
     if(is.null(bands)){
       stop("The bands values should not be empty")
     }
@@ -133,12 +131,8 @@ function(bands = "") {
     bands.split <- str_split(bands, ",")
     bands.unlist <- unlist(bands.split)
     cube = select_bands(data, bands.unlist)
-    return(cube)
-  }
-  #call the function
-  data_cube.filt <- filter_bands(data = data_cube, bands)
-  # rewrite filtered cubes to the global variable
-  data_cube <<- data_cube.filt
+
+    data_cube <<- cube
   # Response msg to user
   msg <- list(status = "SUCCESS", code = "200",message ="gdalcubes bands filtered successfully")
 }
@@ -146,10 +140,7 @@ function(bands = "") {
 #* Limits the data cube to the specified bounding box.
 #* @param bbox 7.1,51.8,7.2,52.8
 #* @post /v1/processes/open-eo/filter_bbox
-function(bbox = "7.1,51.8,7.2,52.8"){
-
-  # filter bbox function
-  filter_bbox <- function(data, bbox){
+filter_bbox <- function(data = data_cube, bbox = "7.1,51.8,7.2,52.8"){
     ##bbox to numeric
     bbox.split <- str_split(bbox, ",")
     bbox.unlist <- unlist(bbox.split)
@@ -172,13 +163,9 @@ function(bbox = "7.1,51.8,7.2,52.8"){
 
     #filter data cube
     cube <- filter_geom(data,poly)
-    return(cube)
 
-  }
-  #call the function
-  data_cube.filt <- filter_bbox(data = data_cube,bbox)
   # rewrite filtered cubes to the global variable
-  data_cube <<- data_cube.filt
+  data_cube <<- cube
   # Response msg to user
   msg <- list(status = "SUCCESS", code = "200",message ="gdalcubes filtered by bounding box successfully")
 
@@ -201,16 +188,11 @@ function(geometries = ""){
 #* Temporal filter based on temporal intervals.
 #* @param extent 2022-01-01,2022-03-30
 #* @post /v1/processes/open-eo/filter_temporal
-function(extent = "2021-01-01,2021-03-30"){
-  # filter temporal function
-  filter_temporal <- function(data, extent){
-    #TO DO
+filter_temporal <- function(data = data_cube,extent = "2021-01-01,2021-03-30"){
     extent.split <- str_split(extent, ",")
     extent.unlist <- unlist(extent.split)
-    select_time(data, c(extent.unlist[1], extent.unlist[2]))
-  }
-  #call the function
-  data_cube.time <- filter_temporal(data = data_cube,extent)
+    cube <- select_time(data, c(extent.unlist[1], extent.unlist[2]))
+
   # overwrite global variable
   data_cube <<- data_cube.time
   # Response msg to user
@@ -223,16 +205,12 @@ function(extent = "2021-01-01,2021-03-30"){
 #* @param target red
 #* @param source B01
 #* @post /v1/processes/open-eo/rename_dimension
-function( source="B01", target="red"){
+rename_dimension <- function(data=data_cube, source="B01", target="red"){
 
-  rename_dimension <- function(data, source, target){
     cube <- rename_bands(data, source = target)
-    return(cube)
-  }
-  #execute
-  data_cube.rename <- rename_dimension(data = data_cube, source, target)
+
   #override global
-  data_cube <<- data_cube.rename
+  data_cube <<- cube
   # Response msg to user
   msg <- list(status = "SUCCESS", code = "200",message ="Renaming of dimension applied")
 }

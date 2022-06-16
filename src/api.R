@@ -16,18 +16,18 @@ library(botor)
 # Additonal set ups
 gdalcubes_options(parallel = 16)
 
-#Surpress warnings
+# Surpress warnings
 options(warn = -1)
 
 
-#set workdir
+# set workdir
 setwd(".")
 dir.create("data")
 setwd("./data")
 
 # gdalcube global variable
 stac_items <- NULL
-data_cube <- NULL
+data_cube <- ""  ## OpenAPI complains of NULL objects
 
 #* @apiTitle Lightweight Platform To Analyze Satellite Images
 #* @apiDescription This service integrates STAC API, OpenEO standards and gdalcubes to be a lightweight platform to enable processing of time series satellite images.
@@ -69,20 +69,21 @@ discover_data <-
            ymax = "52.8",
            time_range = "2021-01-01/2021-06-30",
            collection = "sentinel-s2-l2a-cogs") {
-    #Convert bbox values to numeric
+    # Convert bbox values to numeric
     xmin <- as.numeric(xmin)
     ymin <- as.numeric(ymin)
     xmax <- as.numeric(xmax)
     ymax <- as.numeric(ymax)
-    #Connect to STAC API and get sentinel data
-    stac_object = stac("https://earth-search.aws.element84.com/v0")
-    items = stac_object %>%
+    # Connect to STAC API and get sentinel data
+    stac_object <- stac("https://earth-search.aws.element84.com/v0")
+    items <- stac_object %>%
       stac_search(
         collections = collection,
         bbox = c(xmin, ymin, xmax, ymax),
         datetime = time_range
       ) %>%
-      post_request() %>% items_fetch()
+      post_request() %>%
+      items_fetch()
     # Assign to global variable for stac_items
     stac_items <<- items
   }
@@ -103,27 +104,28 @@ load_collection <-
            bands = "B04,B08",
            spatial_resolution = "250",
            temporal_resolution = "P1M") {
-    ##bbox to numeric
+    ## bbox to numeric
     bbox.split <- str_split(bbox, ",")
     bbox.unlist <- unlist(bbox.split)
     xmin <- as.numeric(bbox.unlist[1])
     ymin <- as.numeric(bbox.unlist[2])
     xmax <- as.numeric(bbox.unlist[3])
     ymax <- as.numeric(bbox.unlist[4])
-    #Connect to STAC API and get sentinel data
-    stac_object = stac("https://earth-search.aws.element84.com/v0")
-    items = stac_object %>%
+    # Connect to STAC API and get sentinel data
+    stac_object <- stac("https://earth-search.aws.element84.com/v0")
+    items <- stac_object %>%
       stac_search(
         collections = id,
         bbox = c(xmin, ymin, xmax, ymax),
         datetime = temporal_extent
       ) %>%
-      post_request() %>% items_fetch()
+      post_request() %>%
+      items_fetch()
     # create image collection from stac items features
     img.col <- stac_image_collection(items$features)
     # Define cube view with monthly aggregation, 250 Metres dimension
     spatial_resolution <- as.numeric(spatial_resolution)
-    v.overview = cube_view(
+    v.overview <- cube_view(
       srs = "EPSG:3857",
       extent = img.col,
       dx = spatial_resolution,
@@ -133,13 +135,13 @@ load_collection <-
       aggregation = "median"
     )
     # gdalcubes creation
-    cube = raster_cube(img.col, v.overview)
+    cube <- raster_cube(img.col, v.overview)
     if (!is.null(bands)) {
-      #split user input
+      # split user input
       bands.split <- str_split(bands, ",")
       bands.unlist <- unlist(bands.split)
       # gdalcubes creation with band filtering
-      cube = select_bands(cube, bands.unlist)
+      cube <- select_bands(cube, bands.unlist)
     }
 
     # Assign to a global variable
@@ -160,10 +162,10 @@ filter_bands <- function(data = data_cube, bands = "B04,B08") {
   if (is.null(bands)) {
     stop("The bands values should not be empty")
   }
-  #split user input
+  # split user input
   bands.split <- str_split(bands, ",")
   bands.unlist <- unlist(bands.split)
-  cube = select_bands(data, bands.unlist)
+  cube <- select_bands(data, bands.unlist)
 
   data_cube <<- cube
   # Response msg to user
@@ -178,7 +180,7 @@ filter_bands <- function(data = data_cube, bands = "B04,B08") {
 #* @post /v1/processes/open-eo/filter_bbox
 filter_bbox <-
   function(data = data_cube, bbox = "7.1,51.8,7.2,52.8") {
-    ##bbox to numeric
+    ## bbox to numeric
     bbox.split <- str_split(bbox, ",")
     bbox.unlist <- unlist(bbox.split)
     xmin <- as.numeric(bbox.unlist[1])
@@ -186,19 +188,19 @@ filter_bbox <-
     xmax <- as.numeric(bbox.unlist[3])
     ymax <- as.numeric(bbox.unlist[4])
 
-    ##create sf points
+    ## create sf points
     pt1 <- st_point(c(xmin, ymin))
     pt2 <- st_point(c(xmin, ymax))
     pt3 <- st_point(c(xmax, ymax))
     pt4 <- st_point(c(xmax, ymin))
     pt5 <- st_point(c(xmin, ymin))
 
-    ##create polygon
+    ## create polygon
     pts <- list(rbind(pt1, pt2, pt3, pt4, pt5))
     poly <- st_polygon(pts)
     poly <- st_sfc(poly, crs = 3857)
 
-    #filter data cube
+    # filter data cube
     cube <- filter_geom(data, poly)
 
     # rewrite filtered cubes to the global variable
@@ -208,7 +210,6 @@ filter_bbox <-
       list(status = "SUCCESS",
            code = "200",
            message = "gdalcubes filtered by bounding box successfully")
-
   }
 
 
@@ -237,7 +238,6 @@ filter_temporal <-
       list(status = "SUCCESS",
            code = "200",
            message = "gdalcubes filtered by time interval successfully")
-
   }
 
 #* Renames a dimension in the data cube while preserving all other properties
@@ -251,7 +251,7 @@ rename_dimension <-
            target = "red") {
     cube <- rename_bands(data, source = target)
 
-    #override global
+    # override global
     data_cube <<- cube
     # Response msg to user
     msg <-
@@ -266,7 +266,7 @@ rename_dimension <-
 #* @param source B01,B02,B03
 #* @post /v1/processes/open-eo/rename_labels
 rename_labels <-
-  function(data  = data_cube,
+  function(data = data_cube,
            dimension = "bands",
            target = "red,green,blue",
            source = "B01,B02,B03") {
@@ -283,21 +283,16 @@ reduce_dimension <-
            reducer = "",
            dimension = "") {
     if (dimension == "time") {
-      bands = bands(data)$name
-      bandStr = c()
+      bands <- bands(data)$name
+      bandStr <- c()
 
       for (i in 1:length(bands)) {
-        bandStr = append(bandStr, sprintf("%s(%s)", reducer, bands[i]))
+        bandStr <- append(bandStr, sprintf("%s(%s)", reducer, bands[i]))
       }
-
-      cube = reduce_time(data, bandStr)
-      return(cube)
-    }
-    else if (dimension == "bands") {
-      cube = apply_pixel(data, reducer, keep_bands = FALSE)
-      return(cube)
-    }
-    else {
+      cube <- reduce_time(data, bandStr)
+    } else if (dimension == "bands") {
+      cube <- apply_pixel(data, reducer, keep_bands = FALSE)
+    } else {
       stop('Kindly select "time" or "bands" as dimension')
     }
 
@@ -308,27 +303,27 @@ reduce_dimension <-
       list(status = "SUCCESS",
            code = "200",
            message = "Dimensions reduced successfully")
-
   }
 
 
 #* Merge two data cubes **Experimental
 #* @param datacube2
 #* @post /v1/processes/open-eo/merge_cubes
-merge_cubes <- function(datacube1 = data_cube ,
+merge_cubes <- function(datacube1 = data_cube,
                         datacube2 = "") {
-  #check if they are not datacubes
+  # check if they are not datacubes
   `%!in%` <- Negate(`%in%`)
   if ("cube" %!in% class(datacube1) &&
       "cube" %!in% class(datacube2)) {
     stop('Provided cubes are not of class "cube"')
   }
-  #check if the datacubes have equal dimesions
-  compare = compare.list(dimensions(datacube1), dimensions(datacube2))
+  # check if the datacubes have equal dimesions
+  compare <-
+    compare.list(dimensions(datacube1), dimensions(datacube2))
   if (FALSE %in% compare) {
     stop("Dimensions of the datacubes provided are not equal")
   }
-  cube = join_bands(c(cube1, cube2))
+  cube <- join_bands(c(cube1, cube2))
 
   data_cube <<- cube
   # Response msg to user
@@ -336,20 +331,21 @@ merge_cubes <- function(datacube1 = data_cube ,
     list(status = "SUCCESS",
          code = "200",
          message = "Process applied successfully")
-
 }
 
 
 #* Run a user defined process on gdalcubes
 #* @param udf User-defined function
+#* @param runtime Leave it empty
 #* @post /v1/processes/open-eo/run_udf
 run_udf <- function(data = data_cube,
                     udf = "",
-                    runtime = NULL) {
-  #convert parsed string function to class function
+                    runtime = "") {
+  runtime <- NULL
+  # convert parsed string function to class function
   func_parse <- parse(text = udf)
   user_function <- eval(func_parse)
-  #TO DO, how to identify a reduce or apply process
+  # TO DO, how to identify a reduce or apply process
   if (process == "reduce") {
     results <- reduce_time(data, FUN = user_function)
   } else if (process == "apply") {
@@ -362,7 +358,6 @@ run_udf <- function(data = data_cube,
     list(status = "SUCCESS",
          code = "200",
          message = "UDF  applied successfully")
-
 }
 
 #* Save processed data
@@ -383,7 +378,7 @@ save_result <- function(data, format = "TIFF") {
                  tmpdir = getwd(),
                  fileext = ".nc"
                ))
-  } else{
+  } else {
     stop("The format entered is not supported")
   }
 
@@ -407,7 +402,7 @@ export_to_s3 <- function() {
 #* @serializer png
 function() {
   # plot images
-  data_cube.plot <- data_cube %>% plot
+  data_cube.plot <- data_cube %>% plot()
 }
 
 #* Delete all files

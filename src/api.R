@@ -363,7 +363,7 @@ run_udf <- function(data = data_cube,
 #* Save processed data
 #* @param format TIFF or NetCDF
 #* @post /v1/processes/open-eo/save_result
-save_result <- function(data, format = "TIFF") {
+save_result <- function(data = data_cube, format = "TIFF") {
   if (is.null(format) || tolower(format) == "tiff" || format == "") {
     write_tif(data,
               tempfile(
@@ -394,6 +394,8 @@ save_result <- function(data, format = "TIFF") {
 #* Export files to aws s3 bucket
 #* @post /v1/export_to_s3
 export_to_s3 <- function() {
+  botor(aws_access_key_id, aws_secret_access_key, aws_session_token,
+        region_name, botocore_session, profile_name)
 
 }
 

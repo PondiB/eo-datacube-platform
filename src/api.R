@@ -266,11 +266,9 @@ function(reducer="", dimension=""){
 
 
 #* Merge two data cubes **Experimental
-#* @param other_cube
+#* @param datacube2
 #* @post /v1/processes/open-eo/merge_cubes
-function(other_cube = ""){
-  #merge cubes function
-  merge_cubes <- function(datacube1 , datacube2){
+merge_cubes <- function(datacube1 = data_cube , datacube2= ""){
     #check if they are not datacubes
     `%!in%` <- Negate(`%in%`)
     if("cube" %!in% class(datacube1) && "cube" %!in% class(datacube2)) {
@@ -282,11 +280,8 @@ function(other_cube = ""){
       stop("Dimensions of the datacubes provided are not equal")
     }
     cube = join_bands(c(cube1, cube2))
-    return(cube)
-  }
-  data_cube.merge <- merge_cubes(data_cube, other_cube)
 
-  data_cube <<- data_cube.merge
+  data_cube <<- cube
   # Response msg to user
   msg <- list(status = "SUCCESS", code = "200",message ="Process applied successfully")
 
@@ -296,9 +291,7 @@ function(other_cube = ""){
 #* Run a user defined process on gdalcubes
 #* @param udf User-defined function
 #* @post /v1/processes/open-eo/run_udf
-function(udf="") {
-  #focus on apply pixel or reduce time for a start
-  run_udf <- function(data, udf, runtime=NULL){
+run_udf <- function(data= data_cube, udf="", runtime=NULL){
     #convert parsed string function to class function
     func_parse <- parse(text = udf)
     user_function <- eval(func_parse)
@@ -308,11 +301,8 @@ function(udf="") {
     }else if (process == "apply"){
       results <- apply_pixel(data,FUN = user_function)
     }
-    return(results)
-  }
-  data_cube.udf <- run_udf(data_cube, udf)
 
-  data_cube <<- data_cube.udf
+  data_cube <<- results
   # Response msg to user
   msg <- list(status = "SUCCESS", code = "200",message ="UDF  applied successfully")
 

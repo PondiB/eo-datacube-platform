@@ -18,7 +18,6 @@ RUN install2.r --error \
     RColorBrewer \
     bfast \
     tidyverse \
-    geojsonR \
     botor \
     magrittr
 

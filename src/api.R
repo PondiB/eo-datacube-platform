@@ -9,7 +9,6 @@ library(uuid)
 library(magrittr)
 library(bfast)
 library(tidyverse)
-library(geojsonR)
 library(botor)
 
 

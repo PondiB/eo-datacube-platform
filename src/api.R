@@ -167,6 +167,7 @@ filter_bands <- function(data = data_cube, bands = "B04,B08") {
   bands.unlist <- unlist(bands.split)
   cube <- select_bands(data, bands.unlist)
 
+  # Overwrite global data_cube variable
   data_cube <<- cube
   # Response msg to user
   msg <-
@@ -203,7 +204,7 @@ filter_bbox <-
     # filter data cube
     cube <- filter_geom(data, poly)
 
-    # rewrite filtered cubes to the global variable
+    # Overwrite global data_cube variable
     data_cube <<- cube
     # Response msg to user
     msg <-
@@ -214,9 +215,24 @@ filter_bbox <-
 
 
 #* Spatial filter using geometries.
-#* @param geometries
+#* @param geometries e.g. https:/.../california.geojson
 #* @post /v1/processes/open-eo/filter_spatial
-filter_spatial <- function(data = data_cube, geometries = "") {
+filter_spatial <- function(data = data_cube, geometries = "https:/.../california.geojson") {
+      #read geojson url and convert to geometry
+      geo.data = read_sf(geometries)
+      geo.data = geo.data$geometry
+      # TO DO check projections
+      #filter
+      cube <- filter_geom(data_cube, geo.data)
+
+      # Overwrite global data_cube variable
+      data_cube <<- cube
+
+      # Response msg to user
+      msg <-
+        list(status = "SUCCESS",
+             code = "200",
+             message = "gdalcubes filtered using geojson provided")
 
 }
 
@@ -231,7 +247,7 @@ filter_temporal <-
     extent.unlist <- unlist(extent.split)
     cube <- select_time(data, c(extent.unlist[1], extent.unlist[2]))
 
-    # overwrite global variable
+    # Overwrite global data_cube variable
     data_cube <<- data_cube.time
     # Response msg to user
     msg <-
@@ -251,7 +267,7 @@ rename_dimension <-
            target = "red") {
     cube <- rename_bands(data, source = target)
 
-    # override global
+    # Overwrite global data_cube variable
     data_cube <<- cube
     # Response msg to user
     msg <-
@@ -296,7 +312,7 @@ reduce_dimension <-
       stop('Kindly select "time" or "bands" as dimension')
     }
 
-    # rewrite cubes to the global variable
+    # Overwrite global data_cube variable
     data_cube <<- cube
     # Response msg to user
     msg <-
@@ -324,7 +340,7 @@ merge_cubes <- function(datacube1 = data_cube,
     stop("Dimensions of the datacubes provided are not equal")
   }
   cube <- join_bands(c(cube1, cube2))
-
+  # Overwrite global data_cube variable
   data_cube <<- cube
   # Response msg to user
   msg <-
@@ -352,6 +368,7 @@ run_udf <- function(data = data_cube,
     results <- apply_pixel(data, FUN = user_function)
   }
 
+  # Overwrite global data_cube variable
   data_cube <<- results
   # Response msg to user
   msg <-

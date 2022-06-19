@@ -89,7 +89,7 @@ discover_data <-
 
 #* Loads a collection and returns a processable data cube(gdalcube).
 #* @param id collection
-#* @param bbox bounding box of ROI
+#* @param spatial_extent bounding box of ROI
 #* @param temporal_extent time range of interest
 #* @param bands bands of interest
 #* @param spatial_resolution Resample value
@@ -98,7 +98,7 @@ discover_data <-
 #* @serializer unboxedJSON
 load_collection <-
   function(id = "sentinel-s2-l2a-cogs",
-           bbox = "7.1,51.8,7.2,52.8",
+           spatial_extent = "7.1,51.8,7.2,52.8",
            temporal_extent = "2021-01-01/2021-06-30",
            bands = "B04,B08",
            spatial_resolution = "250",
@@ -115,7 +115,7 @@ load_collection <-
     items <- stac_object %>%
       stac_search(
         collections = id,
-        bbox = c(xmin, ymin, xmax, ymax),
+        spatial_extent = c(xmin, ymin, xmax, ymax),
         datetime = temporal_extent
       ) %>%
       post_request() %>%
@@ -216,24 +216,25 @@ filter_bbox <-
 #* Spatial filter using geometries.
 #* @param geometries e.g. https:/.../california.geojson
 #* @post /v1/processes/open-eo/filter_spatial
-filter_spatial <- function(data = data_cube, geometries = "https:/.../california.geojson") {
-      #read geojson url and convert to geometry
-      geo.data = read_sf(geometries)
-      geo.data = geo.data$geometry
-      # TO DO check projections
-      #filter
-      cube <- filter_geom(data_cube, geo.data)
+filter_spatial <-
+  function(data = data_cube, geometries = "https:/.../california.geojson") {
+    #read geojson url and convert to geometry
+    geo.data = read_sf(geometries)
+    geo.data = geo.data$geometry
+    # TO DO check projections
+    #filter
+    cube <- filter_geom(data_cube, geo.data)
 
-      # Overwrite global data_cube variable
-      data_cube <<- cube
+    # Overwrite global data_cube variable
+    data_cube <<- cube
 
-      # Response msg to user
-      msg <-
-        list(status = "SUCCESS",
-             code = "200",
-             message = "gdalcubes filtered using geojson provided")
+    # Response msg to user
+    msg <-
+      list(status = "SUCCESS",
+           code = "200",
+           message = "gdalcubes filtered using geojson provided")
 
-}
+  }
 
 
 
@@ -382,7 +383,8 @@ run_udf <- function(data = data_cube,
 save_result <- function(data = data_cube, format = "TIFF") {
   setwd("./data")
 
-  if (is.null(format) || tolower(format) == "tiff" || format == "") {
+  if (is.null(format) ||
+      tolower(format) == "tiff" || format == "") {
     write_tif(data,
               tempfile(
                 pattern = "cube",
@@ -414,8 +416,14 @@ save_result <- function(data = data_cube, format = "TIFF") {
 export_to_s3 <- function() {
   setwd("./data")
   ## TO DO zip folder and then export to s3 bucket
-  botor(aws_access_key_id, aws_secret_access_key, aws_session_token,
-        region_name, botocore_session, profile_name)
+  botor(
+    aws_access_key_id,
+    aws_secret_access_key,
+    aws_session_token,
+    region_name,
+    botocore_session,
+    profile_name
+  )
   s3_upload_file(file, uri, content_type = mime_guess(file))
 
 

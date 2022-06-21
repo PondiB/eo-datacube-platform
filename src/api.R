@@ -156,6 +156,7 @@ load_collection <-
 
 #* Select bands from gdalcube
 #* @param bands B04,B08
+#* @param data **Datacube is read in memory, Neglect param
 #* @post /v1/processes/open-eo/filter_bands
 filter_bands <- function(data = data_cube, bands = "B04,B08") {
   if (is.null(bands)) {
@@ -177,6 +178,7 @@ filter_bands <- function(data = data_cube, bands = "B04,B08") {
 
 #* Limits the data cube to the specified bounding box.
 #* @param bbox 7.1,51.8,7.2,52.8
+#* @param data **Datacube is read in memory, Neglect param
 #* @post /v1/processes/open-eo/filter_bbox
 filter_bbox <-
   function(data = data_cube, bbox = "7.1,51.8,7.2,52.8") {
@@ -215,6 +217,7 @@ filter_bbox <-
 
 #* Spatial filter using geometries.
 #* @param geometries e.g. https:/.../california.geojson
+#* @param data **Datacube is read in memory, Neglect param
 #* @post /v1/processes/open-eo/filter_spatial
 filter_spatial <-
   function(data = data_cube, geometries = "https:/.../california.geojson") {
@@ -240,6 +243,7 @@ filter_spatial <-
 
 #* Temporal filter based on temporal intervals.
 #* @param extent 2022-01-01,2022-03-30
+#* @param data **Datacube is read in memory, Neglect param
 #* @post /v1/processes/open-eo/filter_temporal
 filter_temporal <-
   function(data = data_cube, extent = "2021-01-01,2021-03-30") {
@@ -260,6 +264,7 @@ filter_temporal <-
 #* @param dimension bands
 #* @param target red
 #* @param source B01
+#* @param data **Datacube is read in memory, Neglect param
 #* @post /v1/processes/open-eo/rename_dimension
 rename_dimension <-
   function(data = data_cube,
@@ -280,6 +285,7 @@ rename_dimension <-
 #* @param dimension bands
 #* @param target red,green,blue
 #* @param source B01,B02,B03
+#* @param data **Datacube is read in memory, Neglect param
 #* @post /v1/processes/open-eo/rename_labels
 rename_labels <-
   function(data = data_cube,
@@ -293,6 +299,7 @@ rename_labels <-
 #* Reduce dimensions
 #* @param reducer
 #* @param dimension time or bands
+#* @param data **Datacube is read in memory, Neglect param
 #* @post /v1/processes/open-eo/reduce_dimension
 reduce_dimension <-
   function(data = data_cube,
@@ -324,6 +331,7 @@ reduce_dimension <-
 
 #* Merge two data cubes **Experimental
 #* @param datacube2
+#*  @param datacube1 **Datacube is read in memory, Neglect param
 #* @post /v1/processes/open-eo/merge_cubes
 merge_cubes <- function(datacube1 = data_cube,
                         datacube2 = "") {
@@ -353,6 +361,7 @@ merge_cubes <- function(datacube1 = data_cube,
 #* Run a user defined process on gdalcubes
 #* @param udf User-defined function
 #* @param runtime Leave it empty
+#* @param data **Datacube is read in memory, Neglect param
 #* @post /v1/processes/open-eo/run_udf
 run_udf <- function(data = data_cube,
                     udf = "",

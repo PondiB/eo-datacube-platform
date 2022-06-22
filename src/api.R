@@ -88,7 +88,7 @@ discover_data <-
   }
 
 #* Loads a collection and returns a processable data cube(gdalcube).
-#* @param id collection
+#* @param id collection Sentinel 2 COGS = sentinel-s2-l2a-cogs , Landsat 8 = landsat-8-l1-c1
 #* @param spatial_extent bounding box of ROI
 #* @param temporal_extent time range of interest
 #* @param bands bands of interest

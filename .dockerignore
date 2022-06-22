@@ -10,3 +10,6 @@
 
 # Ignore temp folder
 src/temp
+
+# Ignore generated datasets
+src/data/*

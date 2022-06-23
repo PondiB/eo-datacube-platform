@@ -25,7 +25,8 @@ dir.create("data")
 setwd("./data")
 
 # gdalcube global variable
-stac_items <- NULLdata_cube <- ""  ## OpenAPI complains of NULL objects
+stac_items <-
+  NULLdata_cube <- ""  ## OpenAPI complains of NULL objects
 
 #* @apiTitle Lightweight Platform To Analyze Satellite Images
 #* @apiDescription This service integrates STAC API, OpenEO standards and gdalcubes to be a lightweight platform to enable processing of time series satellite images.
@@ -385,13 +386,13 @@ run_udf <- function(data = data_cube,
 }
 
 #* Save processed data
-#* @param format TIFF or NetCDF
+#* @param format GeoTIFF or NetCDF
 #* @post /v1/processes/open-eo/save_result
-save_result <- function(data = data_cube, format = "TIFF") {
+save_result <- function(data = data_cube, format = "GeoTIFF") {
   setwd("./data")
 
   if (is.null(format) ||
-      tolower(format) == "tiff" || format == "") {
+      tolower(format) == "geotiff" || format == "") {
     write_tif(data,
               tempfile(
                 pattern = "cube",
@@ -419,22 +420,37 @@ save_result <- function(data = data_cube, format = "TIFF") {
 
 
 #* Export files to aws s3 bucket
+#* @param aws_access_key_id AWS access key ID
+#* @param aws_secret_access_key AWS secret access key
+#* @param aws_session_token AWS temporary session token
+#* @param region_name Default region when creating new connections
+#* @param uri URI of an S3 object, should start with s3://, then bucket name and object key
 #* @post /v1/export_to_s3
-export_to_s3 <- function() {
+export_to_s3 <- function(aws_access_key_id = "",
+                         aws_secret_access_key = "",
+                         aws_session_token = "",
+                         region_name = " ",
+                         uri = "s3://") {
   setwd("./data")
-  ## TO DO zip folder and then export to s3 bucket
-  botor(
-    aws_access_key_id,
-    aws_secret_access_key,
-    aws_session_token,
-    region_name,
-    botocore_session,
-    profile_name
-  )
-  s3_upload_file(file, uri, content_type = mime_guess(file))
+  ## zip results
+  files2zip <- dir('.', full.names = TRUE)
+  zip(zipfile = 'resultzip', files = files2zip)
 
+  ## export zipped file to s3 bucket
+  botor(aws_access_key_id,
+        aws_secret_access_key,
+        aws_session_token,
+        region_name)
+  botor_client("S3", type = "s3")
+  s3_upload_file(file = 'resultzip.zip', uri, content_type = mime_guess(file))
 
+  # Response msg to user
+  msg <-
+    list(status = "SUCCESS",
+         code = "200",
+         message = "Files uploaded to S3 bucket")
 }
+
 
 #* Plot processed datacube
 #* @get /v1/plot/datacube

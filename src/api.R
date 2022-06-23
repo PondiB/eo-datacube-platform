@@ -25,8 +25,7 @@ dir.create("data")
 setwd("./data")
 
 # gdalcube global variable
-stac_items <- NULL
-data_cube <- ""  ## OpenAPI complains of NULL objects
+stac_items <- NULLdata_cube <- ""  ## OpenAPI complains of NULL objects
 
 #* @apiTitle Lightweight Platform To Analyze Satellite Images
 #* @apiDescription This service integrates STAC API, OpenEO standards and gdalcubes to be a lightweight platform to enable processing of time series satellite images.
@@ -83,15 +82,13 @@ discover_data <-
       ) %>%
       post_request() %>%
       items_fetch()
-    # Assign to global variable for stac_items
-    stac_items <<- items
   }
 
 #* Loads a collection and returns a processable data cube(gdalcube).
 #* @param id collection Sentinel 2 COGS = sentinel-s2-l2a-cogs , Landsat 8 = landsat-8-l1-c1
 #* @param spatial_extent bounding box of ROI
-#* @param temporal_extent time range of interest
-#* @param bands bands of interest
+#* @param temporal_extent time range of interest e.g. 2021-01-01/2021-03-30
+#* @param bands bands of interest e.g. B04,B08
 #* @param spatial_resolution Resample value
 #* @param temporal_resolution P1M = Monthly, P3M = Quarterly
 #* @post /v1/processes/open-eo/load_collection
@@ -104,18 +101,18 @@ load_collection <-
            spatial_resolution = "250",
            temporal_resolution = "P1M") {
     ## bbox to numeric
-    bbox.split <- str_split(bbox, ",")
-    bbox.unlist <- unlist(bbox.split)
-    xmin <- as.numeric(bbox.unlist[1])
-    ymin <- as.numeric(bbox.unlist[2])
-    xmax <- as.numeric(bbox.unlist[3])
-    ymax <- as.numeric(bbox.unlist[4])
+    spatial_extent.split <- str_split(spatial_extent, ",")
+    spatial_extent.unlist <- unlist(spatial_extent.split)
+    xmin <- as.numeric(spatial_extent.unlist[1])
+    ymin <- as.numeric(spatial_extent.unlist[2])
+    xmax <- as.numeric(spatial_extent.unlist[3])
+    ymax <- as.numeric(spatial_extent.unlist[4])
     # Connect to STAC API and get sentinel data
     stac_object <- stac("https://earth-search.aws.element84.com/v0")
     items <- stac_object %>%
       stac_search(
         collections = id,
-        spatial_extent = c(xmin, ymin, xmax, ymax),
+        bbox = c(xmin, ymin, xmax, ymax),
         datetime = temporal_extent
       ) %>%
       post_request() %>%
@@ -269,7 +266,8 @@ filter_temporal <-
 rename_dimension <-
   function(data = data_cube,
            source = "B01",
-           target = "red") {
+           target = "red",
+           dimension = "bands") {
     cube <- rename_bands(data, source = target)
 
     # Overwrite global data_cube variable

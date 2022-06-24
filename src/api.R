@@ -146,9 +146,12 @@ load_collection <-
 
     # Response msg to user
     msg <-
-      list(status = "SUCCESS",
-           code = "200",
-           message = "gdalcubes object created successfully")
+      list(
+        status = "SUCCESS",
+        code = "200",
+        message = "gdalcubes object created successfully",
+        cube = as_json(data_cube)
+      )
   }
 
 
@@ -207,9 +210,12 @@ filter_bbox <-
     data_cube <<- cube
     # Response msg to user
     msg <-
-      list(status = "SUCCESS",
-           code = "200",
-           message = "gdalcubes filtered by bounding box successfully")
+      list(
+        status = "SUCCESS",
+        code = "200",
+        message = "gdalcubes filtered by bounding box successfully",
+        cube = as_json(data_cube)
+      )
   }
 
 
@@ -231,9 +237,12 @@ filter_spatial <-
 
     # Response msg to user
     msg <-
-      list(status = "SUCCESS",
-           code = "200",
-           message = "gdalcubes filtered using geojson provided")
+      list(
+        status = "SUCCESS",
+        code = "200",
+        message = "gdalcubes filtered using geojson provided",
+        cube = as_json(data_cube)
+      )
 
   }
 
@@ -253,9 +262,12 @@ filter_temporal <-
     data_cube <<- data_cube.time
     # Response msg to user
     msg <-
-      list(status = "SUCCESS",
-           code = "200",
-           message = "gdalcubes filtered by time interval successfully")
+      list(
+        status = "SUCCESS",
+        code = "200",
+        message = "gdalcubes filtered by time interval successfully",
+        cube = as_json(data_cube)
+      )
   }
 
 #* Renames a dimension in the data cube while preserving all other properties
@@ -275,9 +287,12 @@ rename_dimension <-
     data_cube <<- cube
     # Response msg to user
     msg <-
-      list(status = "SUCCESS",
-           code = "200",
-           message = "Renaming of dimension applied")
+      list(
+        status = "SUCCESS",
+        code = "200",
+        message = "Renaming of dimension applied",
+        cube = as_json(data_cube)
+      )
   }
 
 #* Rename dimension labels
@@ -322,9 +337,12 @@ reduce_dimension <-
     data_cube <<- cube
     # Response msg to user
     msg <-
-      list(status = "SUCCESS",
-           code = "200",
-           message = "Dimensions reduced successfully")
+      list(
+        status = "SUCCESS",
+        code = "200",
+        message = "Dimensions reduced successfully",
+        cube = as_json(data_cube)
+      )
   }
 
 
@@ -350,10 +368,14 @@ merge_cubes <- function(datacube1 = data_cube,
   # Overwrite global data_cube variable
   data_cube <<- cube
   # Response msg to user
+  cube = as_json(data_cube)
   msg <-
-    list(status = "SUCCESS",
-         code = "200",
-         message = "Process applied successfully")
+    list(
+      status = "SUCCESS",
+      code = "200",
+      message = "Process applied successfully",
+      cube = as_json(data_cube)
+    )
 }
 
 
@@ -380,9 +402,12 @@ run_udf <- function(data = data_cube,
   data_cube <<- results
   # Response msg to user
   msg <-
-    list(status = "SUCCESS",
-         code = "200",
-         message = "UDF  applied successfully")
+    list(
+      status = "SUCCESS",
+      code = "200",
+      message = "UDF  applied successfully",
+      cube = as_json(data_cube)
+    )
 }
 
 #* Save processed data
